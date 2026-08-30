@@ -30,7 +30,3 @@ async def get_profile(
         "email": current_user.email,
         "role": current_user.role,
     }
-
-@router.get("/test-error")
-async def test_error():
-    raise UserAlreadyExistsError()
