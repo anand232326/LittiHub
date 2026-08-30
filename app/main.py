@@ -9,8 +9,8 @@ from app.middleware.error_handler import app_exception_handler
 from app.middleware.logging import logging_middleware
 from app.middleware.request_id import request_id_middleware
 from app.routers.v1.auth import router as auth_router
-
 from app.routers.v1.users import router as users_router
+from app.routers.v1.restaurants import router as restaurant_router
 
 API_V1_PREFIX = "/api/v1"
 
@@ -45,15 +45,9 @@ app.middleware("http")(request_id_middleware)
 app.middleware("http")(logging_middleware)
 
 # Routers
-app.include_router(
-    auth_router,
-   
-    prefix=API_V1_PREFIX,
-)
-app.include_router(
-    users_router,
-    prefix=API_V1_PREFIX,
-)
+app.include_router(auth_router,prefix=API_V1_PREFIX,)
+app.include_router(users_router,prefix=API_V1_PREFIX,)
+app.include_router(restaurant_router,prefix=API_V1_PREFIX,)
 
 
 @app.get("/")
