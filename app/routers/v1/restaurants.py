@@ -5,9 +5,9 @@ from app.core.enums import UserRole
 from app.models.user import User
 from app.schemas.restaurant import (
     RestaurantCreate,
-    RestaurantResponse,
+    RestaurantResponse,PaginatedResponse
 )
-
+from fastapi import Query
 
 router = APIRouter(
     prefix="/restaurants",
@@ -35,8 +35,17 @@ async def get_restaurant(restaurant_id:str):
     return restaurant
 
 
-@router.get("/",response_model=list[RestaurantResponse],)
-async def get_restaurants(city: str | None = None,):
+@router.get( "/", response_model=PaginatedResponse[RestaurantResponse],)
+async def get_restaurants(city: str | None = None,page: int = Query(default=1,ge=1,),
+    page_size: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
+):
+
     return await restaurant_controller.get_all(
-        city=city
+        city=city,
+        page=page,
+        page_size=page_size,
     )

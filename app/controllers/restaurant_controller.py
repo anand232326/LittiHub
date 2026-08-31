@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from app.schemas.restaurant import (
     RestaurantCreate,
     RestaurantResponse,
+    PaginatedResponse
 )
 from app.services.restaurant_service import restaurant_service
 
@@ -25,10 +26,12 @@ class RestaurantController:
         return restaurant
 
 
-    async def get_all(self,city: str | None = None,) -> list[RestaurantResponse]:
+    async def get_all(self,city: str | None = None,page: int = 1,page_size: int = 10,) -> PaginatedResponse[RestaurantResponse]:
         return await restaurant_service.get_all(
-        city=city
-        )    
+            city=city,
+            page=page,
+            page_size=page_size,
+        ) 
 
 
 
