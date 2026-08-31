@@ -27,4 +27,43 @@ class RestaurantService:
             updated_at=restaurant.updated_at,
         )   
 
+
+    async def get_by_id(self,restaurant_id:str,)->RestaurantResponse |None:
+        restaurant=await self.restaurant_repository.get_by_id(restaurant_id)
+
+        if restaurant is None:
+            return None
+
+        return RestaurantResponse(
+            id=str(restaurant.id),
+            name=restaurant.name,
+            phone=restaurant.phone,
+            address=restaurant.address,
+            city=restaurant.city,
+            is_active=restaurant.is_active,
+            created_at=restaurant.created_at,
+            updated_at=restaurant.updated_at,
+        )
+
+
+    async def get_all(self,city:str |None=None)->list[RestaurantResponse]:
+        restaurants=await self.restaurant_repository.get_all(city=city)
+
+        return[
+            RestaurantResponse(
+            id=str(restaurants.id),
+            name=restaurants.name,
+            phone=restaurants.phone,
+            address=restaurants.address,
+            city=restaurants.city,
+            is_active=restaurants.is_active,
+            created_at=restaurants.created_at,
+            updated_at=restaurants.updated_at,
+        ) 
+
+        for restaurants in restaurants
+        ]
+
+
+
 restaurant_service = RestaurantService()  
