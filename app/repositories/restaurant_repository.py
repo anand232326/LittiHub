@@ -19,12 +19,22 @@ class RestaurantRepository:
 
 
 
-    async def get_all(self,city:str |None=None,)->list[Restaurant]:
+    async def get_all(self,city:str |None=None,page:int=1,page_size:int=10,)->tuple[list[Restaurant],int]:
         query={}
         if city:
             query["city"]=city
 
-        return await Restaurant.find(query).to_list()      
+        total=await Restaurant.find(query).count()
+        skip=(page-1)*page_size
+
+        restaurants = await (
+        Restaurant.find(query)
+        .skip(skip)
+        .limit(page_size)
+        .to_list()
+        )
+
+        return restaurants,total   
 
 
 restaurant_repository = RestaurantRepository()

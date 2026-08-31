@@ -1,6 +1,6 @@
 from pydantic import BaseModel,Field
 from datetime import datetime
-
+from typing import Generic, TypeVar
 
 class RestaurantCreate(BaseModel):
     name:str=Field(min_length=2,max_length=150,)
@@ -18,3 +18,13 @@ class RestaurantResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+T=TypeVar("T")
+
+class PaginatedResponse(BaseModel,Generic[T]):
+    items:list[T]
+    total:int
+    page:int
+    page_size:int
+    total_pages:int
