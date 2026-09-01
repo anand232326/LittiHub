@@ -28,3 +28,11 @@ class PaginatedResponse(BaseModel,Generic[T]):
     page:int
     page_size:int
     total_pages:int
+
+
+class RestaurantUpdate(BaseModel):
+    name: str | None = Field(default=None,min_length=2,max_length=100,)
+    phone: str | None = Field(default=None,min_length=10,max_length=15,)
+    address: str | None = Field(default=None,min_length=5,max_length=200,)
+    city: str | None = Field(default=None,min_length=2,max_length=100,)
+    is_active: bool | None = None
