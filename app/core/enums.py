@@ -8,4 +8,15 @@ class UserRole(str,Enum):
     RIDER="rider"
     ADMIN="admin"
     
-   
+
+
+
+class SortOrder(str, Enum):
+    ASC = "asc"
+    DESC = "desc"
+
+
+class RestaurantSortField(str, Enum):
+    NAME = "name"
+    CITY = "city"
+    CREATED_AT = "created_at"   
