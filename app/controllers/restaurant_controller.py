@@ -2,13 +2,15 @@ from fastapi import HTTPException, status
 from app.schemas.restaurant import RestaurantCreate,RestaurantResponse,PaginatedResponse,RestaurantUpdate
 from app.services.restaurant_service import restaurant_service
 from app.core.enums import SortOrder, RestaurantSortField
-
+from app.dependencies.auth import get_current_user
+from app.models.user import User
 
 class RestaurantController:
 
-    async def create(self,restaurant_data: RestaurantCreate,) -> RestaurantResponse:
+    async def create(self,restaurant_data: RestaurantCreate,current_user: User,) -> RestaurantResponse:
         return await restaurant_service.create(
-            restaurant_data
+            restaurant_data=restaurant_data,
+            owner_id=str(current_user.id),
         )
 
 
@@ -40,10 +42,11 @@ class RestaurantController:
 
 
 
-    async def update(self,restaurant_id: str,restaurant_data: RestaurantUpdate,) -> RestaurantResponse:
+    async def update(self,restaurant_id: str,restaurant_data: RestaurantUpdate,current_user: User,) -> RestaurantResponse:
         restaurant = await restaurant_service.update(
-         restaurant_id,
-         restaurant_data,
+          restaurant_id=restaurant_id,
+          restaurant_data=restaurant_data,
+          current_user=current_user,
         )
 
         if restaurant is None:

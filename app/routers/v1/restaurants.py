@@ -5,6 +5,7 @@ from app.core.enums import UserRole
 from app.models.user import User
 from app.schemas.restaurant import RestaurantCreate,RestaurantResponse,PaginatedResponse,RestaurantUpdate
 from fastapi import Query
+from app.dependencies.auth import get_current_user
 from app.core.enums import SortOrder, RestaurantSortField
 
 router = APIRouter(
@@ -13,11 +14,12 @@ router = APIRouter(
 )
 
 
-@router.post( "/", response_model=RestaurantResponse, status_code=201,)
+@router.post( "/", response_model=RestaurantResponse,)
 async def create_restaurant(restaurant_data: RestaurantCreate,
-current_user: User = Depends(require_role(UserRole.ADMIN)),):
+current_user: User = Depends(get_current_user),):
     return await restaurant_controller.create(
-        restaurant_data
+        restaurant_data,
+        current_user,
     )
 
 
@@ -70,7 +72,7 @@ async def get_restaurants(
 
 
 @router.patch("/{restaurant_id}",response_model=RestaurantResponse,)
-async def update_restaurant(restaurant_id: str,restaurant_data: RestaurantUpdate,):
+async def update_restaurant(restaurant_id: str,restaurant_data: RestaurantUpdate,current_user: User = Depends(get_current_user),):
     return await restaurant_controller.update(
         restaurant_id,
         restaurant_data,

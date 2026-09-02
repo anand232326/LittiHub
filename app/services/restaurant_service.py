@@ -2,6 +2,9 @@ from app.models.restaurant import Restaurant
 from app.repositories.restaurant_repository import restaurant_repository
 from app.schemas.restaurant import RestaurantCreate, RestaurantResponse,PaginatedResponse
 from math import ceil
+from app.core.exceptions import PermissionDeniedError
+from app.core.enums import UserRole
+from app.models.user import User
 from app.utils.pagination import calculate_pagination
 from app.core.enums import SortOrder, RestaurantSortField
 from datetime import datetime, timezone
@@ -12,12 +15,13 @@ class RestaurantService:
     def __init__(self):
         self.restaurant_repository = restaurant_repository
 
-    async def create(self,restaurant_data:RestaurantCreate,)->RestaurantResponse:
+    async def create(self,restaurant_data:RestaurantCreate,owner_id: str,)->RestaurantResponse:
         restaurant=Restaurant(
             name=restaurant_data.name,
             phone=restaurant_data.phone,
             address=restaurant_data.address,
             city=restaurant_data.city,
+            owner_id=owner_id,
         )
         restaurant=await self.restaurant_repository.create(restaurant)
 
@@ -96,7 +100,7 @@ class RestaurantService:
 
 
 
-    async def update(self,restaurant_id: str,restaurant_data: RestaurantUpdate,) -> RestaurantResponse | None:
+    async def update(self,restaurant_id: str,restaurant_data: RestaurantUpdate,current_user:User,) -> RestaurantResponse | None:
         restaurant = await self.restaurant_repository.get_by_id(
             restaurant_id
         )
@@ -104,6 +108,16 @@ class RestaurantService:
         if restaurant is None:
            return None
 
+        # 2. Authorization check
+        is_owner = restaurant.owner_id == str(current_user.id)
+        is_admin = current_user.role == UserRole.ADMIN.value
+
+        if not is_owner and not is_admin:
+           raise PermissionDeniedError(
+            "You do not have permission to update this restaurant"
+        )
+
+        
         update_data = restaurant_data.model_dump(
         exclude_unset=True
         )
@@ -121,7 +135,7 @@ class RestaurantService:
         )
 
         update_data["updated_at"] = datetime.now(timezone.utc)
-        
+
         restaurant = await self.restaurant_repository.update(
         restaurant,
         update_data,
