@@ -56,6 +56,19 @@ class RestaurantController:
         )
 
         return restaurant
+
+
+    async def delete(self,restaurant_id: str,current_user: User,) -> None:
+        deleted = await restaurant_service.delete(
+            restaurant_id=restaurant_id,
+            current_user=current_user,
+        )
+
+        if not deleted:
+           raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Restaurant with id '{restaurant_id}' not found",
+        )
  
 
 

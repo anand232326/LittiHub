@@ -2,6 +2,7 @@ from app.models.restaurant import Restaurant
 from bson import ObjectId
 from bson.errors import InvalidId
 from beanie import SortDirection
+from datetime import datetime, timezone
 from app.core.enums import SortOrder, RestaurantSortField
 
 class RestaurantRepository:
@@ -17,14 +18,21 @@ class RestaurantRepository:
         except InvalidId:
             return None
 
-        return await Restaurant.get(object_id) 
+        return await Restaurant.find_one(
+             {
+            "_id": object_id,
+            "is_deleted": False,
+        }
+        ) 
 
 
 
     async def get_all(self,city:str |None=None,page:int=1,page_size:int=10, is_active:bool |None=None,
                       sorted_by:RestaurantSortField=RestaurantSortField.CREATED_AT,
                       sorted_order:SortOrder=SortOrder.DESC)->tuple[list[Restaurant],int]:
-        query={}
+        query={
+            "is_deleted": False
+        }
         if city:
             query["city"]=city
 
@@ -54,6 +62,17 @@ class RestaurantRepository:
         await restaurant.set(update_data)
 
         return restaurant 
+
+
+    async def soft_delete(self,restaurant:Restaurant,)->Restaurant:
+        await restaurant.set(
+            {
+                "is_deleted":True,
+                "is_active":False,
+                "updated_at":datetime.now(timezone.utc),
+            }
+        )
+        return restaurant
 
 
 restaurant_repository = RestaurantRepository()
