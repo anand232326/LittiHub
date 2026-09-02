@@ -45,3 +45,14 @@ class InvalidTokenError(AppException):
             message="Invalid or expired authentication token.",
             status_code=401,
         )
+
+
+
+class PermissionDeniedError(AppException):
+
+    def __init__(self,message: str = "You do not have permission to perform this action",):
+        super().__init__(
+            code="PERMISSION_DENIED",
+            message=message,
+            status_code=403,
+        )
