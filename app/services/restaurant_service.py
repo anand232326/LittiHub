@@ -153,6 +153,28 @@ class RestaurantService:
     )
 
 
+    async def delete(self,restaurant_id:str,current_user:User)->bool:
+        restaurant=await self.restaurant_repository.get_by_id(restaurant_id)
+
+        if restaurant is None:
+            return False
+
+        is_owner=(restaurant.owner_id==str(current_user.id))
+        is_admin=(current_user.role==UserRole.ADMIN.value)
+
+        if not is_owner and not is_admin:
+           raise PermissionDeniedError(
+            "You do not have permission to delete this restaurant"
+        )
+        # Soft delete
+        await self.restaurant_repository.soft_delete(
+        restaurant
+        )
+
+        return True
+
+
+
 
 
 restaurant_service = RestaurantService()  

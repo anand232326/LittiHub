@@ -35,29 +35,20 @@ async def get_restaurant(restaurant_id:str):
     return restaurant
 
 
-@router.get(
-    "/",
-    response_model=PaginatedResponse[RestaurantResponse],
-)
+@router.get("/",response_model=PaginatedResponse[RestaurantResponse],)
 async def get_restaurants(
-
     city: str | None = None,
-
     is_active: bool | None = None,
-
     page: int = Query(
         default=1,
         ge=1,
     ),
-
     page_size: int = Query(
         default=10,
         ge=1,
         le=100,
     ),
-
     sort_by: RestaurantSortField = RestaurantSortField.CREATED_AT,
-
     sort_order: SortOrder = SortOrder.DESC,
 ):
 
@@ -74,6 +65,16 @@ async def get_restaurants(
 @router.patch("/{restaurant_id}",response_model=RestaurantResponse,)
 async def update_restaurant(restaurant_id: str,restaurant_data: RestaurantUpdate,current_user: User = Depends(get_current_user),):
     return await restaurant_controller.update(
-        restaurant_id,
-        restaurant_data,
+        restaurant_id=restaurant_id,
+        restaurant_data=restaurant_data,
+        current_user=current_user,
+    )
+
+
+@router.delete("/{restaurant_id}",status_code=status.HTTP_204_NO_CONTENT,)
+async def delete_restaurant(restaurant_id: str,current_user: User = Depends(get_current_user),):
+
+    await restaurant_controller.delete(
+        restaurant_id=restaurant_id,
+        current_user=current_user,
     )

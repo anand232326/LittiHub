@@ -10,6 +10,7 @@ class Restaurant(Document):
     city:str=Field(min_length=2,max_length=100,)
     owner_id: str
     is_active:bool=True
+    is_deleted: bool = False
     created_at:datetime=Field(default_factory=lambda:datetime.now(timezone.utc))
     updated_at:datetime=Field(default_factory=lambda:datetime.now(timezone.utc))
 
