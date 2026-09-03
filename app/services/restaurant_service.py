@@ -108,16 +108,11 @@ class RestaurantService:
         if restaurant is None:
            return None
 
-        # 2. Authorization check
-        is_owner = restaurant.owner_id == str(current_user.id)
-        is_admin = current_user.role == UserRole.ADMIN.value
-
-        if not is_owner and not is_admin:
-           raise PermissionDeniedError(
-            "You do not have permission to update this restaurant"
+        self._check_manage_permission(
+            restaurant=restaurant,
+            current_user=current_user,
         )
-
-        
+          
         update_data = restaurant_data.model_dump(
         exclude_unset=True
         )
@@ -159,12 +154,9 @@ class RestaurantService:
         if restaurant is None:
             return False
 
-        is_owner=(restaurant.owner_id==str(current_user.id))
-        is_admin=(current_user.role==UserRole.ADMIN.value)
-
-        if not is_owner and not is_admin:
-           raise PermissionDeniedError(
-            "You do not have permission to delete this restaurant"
+        self._check_manage_permission(
+            restaurant=restaurant,
+            current_user=current_user,
         )
         # Soft delete
         await self.restaurant_repository.soft_delete(
@@ -174,6 +166,14 @@ class RestaurantService:
         return True
 
 
+    def _check_manage_permission(self,restaurant: Restaurant,current_user: User,) -> None:
+        is_owner = (restaurant.owner_id == str(current_user.id))
+        is_admin = (current_user.role == UserRole.ADMIN.valu)
+
+        if not is_owner and not is_admin:
+            raise PermissionDeniedError(
+               "You do not have permission to manage this restaurant"
+        )
 
 
 
