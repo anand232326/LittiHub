@@ -75,4 +75,35 @@ class RestaurantRepository:
         return restaurant
 
 
+
+    async def get_deleted_by_id(self,restaurant_id:str)->Restaurant | None:
+        try:
+            object_id=ObjectId(restaurant_id)
+
+        except Exception:
+            return None
+
+        return await Restaurant.find_one(
+            {
+                "_id":object_id,
+                "is_deleted":True,
+            }
+        )
+
+
+
+    async def restore(self,restaurant: Restaurant) -> Restaurant:
+            await restaurant.set(
+            {
+                "is_deleted": False,
+                "is_active": True,
+                "updated_at": datetime.now(timezone.utc),
+            }
+            )
+
+            return restaurant
+
+
+
+
 restaurant_repository = RestaurantRepository()

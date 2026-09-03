@@ -177,4 +177,28 @@ class RestaurantService:
 
 
 
+    async def restore(self,restaurant_id: str,) -> RestaurantResponse | None:
+            restaurant = await self.restaurant_repository.get_deleted_by_id(
+            restaurant_id
+            )
+
+            if restaurant is None:
+                return None
+
+            restaurant = await self.restaurant_repository.restore(
+             restaurant
+            )
+
+            return RestaurantResponse(
+                id=str(restaurant.id),
+                name=restaurant.name,
+                phone=restaurant.phone,
+                address=restaurant.address,
+                city=restaurant.city,
+                is_active=restaurant.is_active,
+                created_at=restaurant.created_at,
+                updated_at=restaurant.updated_at,
+            )
+
+
 restaurant_service = RestaurantService()  

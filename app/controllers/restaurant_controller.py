@@ -69,6 +69,20 @@ class RestaurantController:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Restaurant with id '{restaurant_id}' not found",
         )
+
+
+    async def restore(self,restaurant_id: str,) -> RestaurantResponse:
+            restaurant = await restaurant_service.restore(
+            restaurant_id
+            )
+
+            if restaurant is None:
+                raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Deleted restaurant with id '{restaurant_id}' not found",
+            )
+
+            return restaurant    
  
 
 

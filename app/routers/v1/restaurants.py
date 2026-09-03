@@ -7,6 +7,10 @@ from app.schemas.restaurant import RestaurantCreate,RestaurantResponse,Paginated
 from fastapi import Query
 from app.dependencies.auth import get_current_user
 from app.core.enums import SortOrder, RestaurantSortField
+from app.dependencies.auth import require_role
+
+
+
 
 router = APIRouter(
     prefix="/restaurants",
@@ -77,4 +81,12 @@ async def delete_restaurant(restaurant_id: str,current_user: User = Depends(get_
     await restaurant_controller.delete(
         restaurant_id=restaurant_id,
         current_user=current_user,
+    )
+
+
+
+@router.patch("/{restaurant_id}/restore",response_model=RestaurantResponse,)
+async def restore_restaurant( restaurant_id: str,_: User = Depends(require_role(UserRole.ADMIN)),):
+    return await restaurant_controller.restore(
+        restaurant_id
     )
