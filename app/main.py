@@ -11,6 +11,7 @@ from app.middleware.request_id import request_id_middleware
 from app.routers.v1.auth import router as auth_router
 from app.routers.v1.users import router as users_router
 from app.routers.v1.restaurants import router as restaurant_router
+from app.routers.v1.menu_category import router as menu_category_router
 
 API_V1_PREFIX = "/api/v1"
 

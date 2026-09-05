@@ -1,6 +1,7 @@
 from pymongo import AsyncMongoClient
 from beanie import init_beanie
 from app.models.restaurant import Restaurant
+from app.models.menu_category import MenuCategory
 from app.core.config import Config
 from app.models.user import User
 
@@ -29,6 +30,7 @@ async def init_db() -> None:
         document_models=[
             User,
             Restaurant,
+            MenuCategory,
         ],
     )
 
