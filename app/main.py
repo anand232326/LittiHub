@@ -12,6 +12,7 @@ from app.routers.v1.auth import router as auth_router
 from app.routers.v1.users import router as users_router
 from app.routers.v1.restaurants import router as restaurant_router
 from app.routers.v1.menu_category import router as menu_category_router
+from app.routers.v1.menu_item import router as menu_item_router
 
 API_V1_PREFIX = "/api/v1"
 
@@ -50,6 +51,7 @@ app.include_router(auth_router,prefix=API_V1_PREFIX,)
 app.include_router(users_router,prefix=API_V1_PREFIX,)
 app.include_router(restaurant_router,prefix=API_V1_PREFIX,)
 app.include_router(menu_category_router,prefix=API_V1_PREFIX,)
+app.include_router(menu_item_router,prefix=API_V1_PREFIX,)
 
 
 @app.get("/")
