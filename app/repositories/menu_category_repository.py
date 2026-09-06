@@ -35,6 +35,7 @@ class MenuCategoryRepository:
         )
 
 
+   
     async def get_all_by_restaurant(
     self,
     restaurant_id: str,
@@ -56,11 +57,13 @@ class MenuCategoryRepository:
         else SortDirection.DESCENDING
         )
 
+        # Pass field and direction inside a list of tuples
         return await (
         MenuCategory.find(query)
-        .sort("name", sort_direction)
+        .sort([("name", sort_direction)])
         .to_list()
         )
+   
 
 
     async def update(

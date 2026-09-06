@@ -49,6 +49,7 @@ app.middleware("http")(logging_middleware)
 app.include_router(auth_router,prefix=API_V1_PREFIX,)
 app.include_router(users_router,prefix=API_V1_PREFIX,)
 app.include_router(restaurant_router,prefix=API_V1_PREFIX,)
+app.include_router(menu_category_router,prefix=API_V1_PREFIX,)
 
 
 @app.get("/")

@@ -15,6 +15,9 @@ prefix="/menu-categories",
 tags=["Menu Categories"],
 )
 
+
+
+
 # CUSTOMER + ADMIN
 
 @router.get("/restaurant/{restaurant_id}",response_model=list[MenuCategoryResponse],)
@@ -24,6 +27,17 @@ async def get_restaurant_categories(restaurant_id: str,is_active: bool | None = 
     is_active=is_active,
     )
 
+
+# ADMIN ONLY
+
+@router.post("/",response_model=MenuCategoryResponse,status_code=status.HTTP_201_CREATED,)
+async def create_category(category_data: MenuCategoryCreate,_: object = Depends(require_role(UserRole.ADMIN)),):
+    return await menu_category_controller.create(
+    category_data=category_data,
+    )
+
+
+
 # CUSTOMER + ADMIN
 
 @router.get("/{category_id}",response_model=MenuCategoryResponse,)
@@ -31,13 +45,7 @@ async def get_category(category_id: str,):
     return await menu_category_controller.get_by_id(category_id=category_id,
     )
 
-# ADMIN ONLY
 
-@router.post("/",response_model=MenuCategoryResponse,)
-async def create_category(category_data: MenuCategoryCreate,_: object = Depends(require_role(UserRole.ADMIN)),):
-    return await menu_category_controller.create(
-    category_data=category_data,
-    )
 
 # ADMIN ONLY
 
