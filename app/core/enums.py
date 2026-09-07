@@ -9,7 +9,10 @@ class UserRole(str,Enum):
     ADMIN="admin"
     
 
-
+class MenuItemSortField(str, Enum):
+    NAME = "name"
+    PRICE = "price"
+    CREATED_AT = "created_at"
 
 class SortOrder(str, Enum):
     ASC = "asc"

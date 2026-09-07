@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, Field
-
+from app.utils.pagination import PaginationResponse
 
 
 class MenuItemCreate(BaseModel):
@@ -35,3 +35,8 @@ class MenuItemResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class MenuItemListResponse(BaseModel): 
+    items: list[MenuItemResponse] 
+    pagination: PaginationResponse    

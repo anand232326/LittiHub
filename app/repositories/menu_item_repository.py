@@ -2,6 +2,12 @@ from datetime import datetime,timezone
 from bson import ObjectId
 from bson.errors import InvalidId
 from app.models.menu_item import MenuItem
+from typing import Any
+from beanie import SortDirection
+from app.core.enums import (
+    MenuItemSortField,
+    SortOrder,
+)
 
 
 
@@ -26,11 +32,25 @@ class MenuItemRepository:
         )
 
     async def get_all_by_restaurant(self,restaurant_id:str,is_active:bool | None=None,
-            is_available:bool | None=None,)->list[MenuItem]:
-        query={
+            page:int=1,page_size: int = 20,search: str | None = None,
+            sort_by: MenuItemSortField = MenuItemSortField.CREATED_AT,
+            sort_order: SortOrder = SortOrder.DESC,category_id: str | None = None,
+            is_available:bool | None=None,)->tuple[list[MenuItem], int]:
+        
+        query:dict[str,Any]={
             "restaurant_id":restaurant_id,
             "is_deleted":False,
         }
+
+        if search: 
+            query["name"] = {
+                "$regex": search,
+               "$options": "i", 
+
+            }
+
+        if category_id is not None: 
+            query["category_id"] = category_id
 
         if is_active is not None:
             query["is_active"]=is_active
@@ -38,10 +58,31 @@ class MenuItemRepository:
         if is_available is not None:
             query["is_available"]=is_available
 
-        return await(
+        total = await MenuItem.find(query).count()   
+        skip = (page - 1) * page_size 
+
+        sort_direction = (
+            SortDirection.ASCENDING
+            if sort_order == SortOrder.ASC
+            else SortDirection.DESCENDING
+        )
+
+        menu_items = await (
             MenuItem.find(query)
+            .sort(
+                (
+                    sort_by.value,
+                    sort_direction,
+                )
+            )
+            .skip(skip)
+            .limit(page_size)
             .to_list()
-        )  
+        )
+
+        return menu_items, total
+
+      
 
 
     async def get_all_by_category(

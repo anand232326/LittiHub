@@ -1,4 +1,5 @@
 from math import ceil
+from pydantic import BaseModel
 
 
 def calculate_pagination(page: int,page_size: int,total: int,) -> dict:
@@ -9,3 +10,15 @@ def calculate_pagination(page: int,page_size: int,total: int,) -> dict:
         "total": total,
         "total_pages": total_pages,
     }
+
+
+
+
+
+
+class PaginationResponse(BaseModel):
+    page: int
+    page_size: int
+    total: int
+    total_pages: int
+

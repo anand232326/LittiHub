@@ -23,5 +23,6 @@ class MenuItem(Document):
 
 
 
+
 class Settings: 
     name = "menu_items"    
