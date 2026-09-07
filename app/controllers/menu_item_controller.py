@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from app.schemas.menu_item import MenuItemCreate,MenuItemResponse,MenuItemUpdate
+from app.schemas.menu_item import MenuItemCreate,MenuItemResponse,MenuItemUpdate,MenuItemListResponse
 from app.services.menu_item_service import menu_item_service
 from app.core.enums import (
     MenuItemSortField,
@@ -74,15 +74,25 @@ class MenuItemController:
     async def get_all_by_category(
     self,
     category_id: str,
+    page: int = 1,
+    page_size: int = 20,
+    search: str | None = None,
     is_active: bool | None = None,
     is_available: bool | None = None,
-    ) -> list[MenuItemResponse]:
+    sort_by: MenuItemSortField = MenuItemSortField.CREATED_AT,
+    sort_order: SortOrder = SortOrder.DESC,
+    ) -> MenuItemListResponse:
 
         return await menu_item_service.get_all_by_category(
         category_id=category_id,
+        page=page,
+        page_size=page_size,
+        search=search,
         is_active=is_active,
         is_available=is_available,
-        )
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
 
 
     async def update(

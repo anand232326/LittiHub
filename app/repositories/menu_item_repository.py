@@ -84,17 +84,27 @@ class MenuItemRepository:
 
       
 
-
     async def get_all_by_category(
     self,
     category_id: str,
+    page: int = 1,
+    page_size: int = 20,
+    search: str | None = None,
     is_active: bool | None = None,
     is_available: bool | None = None,
-    ) -> list[MenuItem]:
+    sort_by: MenuItemSortField = MenuItemSortField.CREATED_AT,
+    sort_order: SortOrder = SortOrder.DESC,
+    ) -> tuple[list[MenuItem], int]:
 
-        query = {
+        query: dict[str, Any] = {
         "category_id": category_id,
         "is_deleted": False,
+        }
+
+        if search:
+            query["name"] = {
+            "$regex": search,
+            "$options": "i",
         }
 
         if is_active is not None:
@@ -103,11 +113,34 @@ class MenuItemRepository:
         if is_available is not None:
             query["is_available"] = is_available
 
-        return await (
+        total = await MenuItem.find(query).count()
+
+        skip = (page - 1) * page_size
+
+        sort_direction = (
+        SortDirection.ASCENDING
+        if sort_order == SortOrder.ASC
+        else SortDirection.DESCENDING
+        )
+
+        menu_items = await (
         MenuItem.find(query)
+        .sort(
+            (
+                sort_by.value,
+                sort_direction,
+            )
+        )
+        .skip(skip)
+        .limit(page_size)
         .to_list()
         )
 
+        return menu_items, total
+    
+
+
+    
 
     async def update(self,menu_item: MenuItem,update_data: dict,) -> MenuItem:
         await menu_item.set(update_data)
