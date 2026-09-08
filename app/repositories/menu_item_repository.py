@@ -187,4 +187,23 @@ class MenuItemRepository:
         return menu_item
 
 
+    async def get_active_by_restaurant(
+    self,
+    restaurant_id: str,
+    ) -> list[MenuItem]:
+
+        return await (
+        MenuItem.find(
+            {
+                "restaurant_id": restaurant_id,
+                "is_deleted": False,
+                "is_active": True,
+                "is_available": True,
+            }
+        )
+        .sort("name")
+        .to_list()
+        )
+
+
 menu_item_repository = MenuItemRepository()         
