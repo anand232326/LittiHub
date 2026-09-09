@@ -9,6 +9,15 @@ RestaurantCreate,
 RestaurantResponse,
 RestaurantUpdate,
 )
+from app.controllers.restaurant_menu_controller import (
+    restaurant_menu_controller,
+)
+from app.schemas.restaurant_menu import (
+    RestaurantMenuResponse,
+)
+
+
+
 
 router = APIRouter(
 prefix="/restaurants",
