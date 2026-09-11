@@ -243,5 +243,92 @@ backend/
                 │       INFRASTRUCTURE             │
                 │ Docker → Kubernetes              │
                 │ Autoscaling / Service Discovery │
-                └─────────────────────────────────┘#   L i t t i H u b  
- 
+                └─────────────────────────────────┘
+
+
+
+
+LittiHub/
+│
+├── services/
+│   │
+│   ├── auth-service/
+│   │   ├── app/
+│   │   │   ├── core/
+│   │   │   ├── models/
+│   │   │   ├── schemas/
+│   │   │   ├── repositories/
+│   │   │   ├── services/
+│   │   │   ├── controllers/
+│   │   │   ├── routers/
+│   │   │   └── main.py
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── user-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── restaurant-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── menu-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── cart-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── order-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   ├── requirements.txt
+│   │   └── .env
+│   │
+│   ├── inventory-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   └── requirements.txt
+│   │
+│   ├── payment-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   └── requirements.txt
+│   │
+│   ├── delivery-service/
+│   │   ├── app/
+│   │   ├── Dockerfile
+│   │   └── requirements.txt
+│   │
+│   └── notification-service/
+│       ├── app/
+│       ├── Dockerfile
+│       └── requirements.txt
+│
+├── gateway/
+│   └── api-gateway/
+│
+├── infrastructure/
+│   ├── nginx/
+│   ├── redis/
+│   ├── kafka/
+│   └── mongodb/
+│
+├── docker-compose.yml
+│
+├── tests/
+│
+└── README.md
+
+

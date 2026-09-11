@@ -83,3 +83,13 @@ async def restore_restaurant(restaurant_id: str,_: User = Depends(require_role(U
         restaurant_id=restaurant_id,
     )
 
+
+
+@router.get("/{restaurant_id}/menu",response_model=RestaurantMenuResponse,)
+async def get_restaurant_menu(restaurant_id: str,):
+    return await (
+        restaurant_menu_controller.get_restaurant_menu(
+            restaurant_id
+        )
+    )
+
