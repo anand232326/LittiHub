@@ -1,12 +1,13 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+
+from pymongo import AsyncMongoClient
 from beanie import init_beanie
 
 from app.core.config import Config
 from app.models.user import User
 
 
-# MongoDB client
-client = AsyncIOMotorClient(
+# MongoDB async client
+client = AsyncMongoClient(
     Config.MONGO_URL
 )
 
@@ -22,4 +23,8 @@ async def init_db():
             User,
         ],
     )
+
+
+async def close_db():
+    await client.close()
 

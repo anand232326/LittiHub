@@ -12,6 +12,17 @@ SERVICE_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(SERVICE_ROOT / ".env")
 
 
+def get_required_env(name: str) -> str:
+    value = os.getenv(name)
+
+    if not value:
+        raise RuntimeError(
+            f"Required environment variable '{name}' is missing"
+        )
+
+    return value
+
+
 class Config:
     APP_NAME = os.getenv(
         "APP_NAME",
@@ -28,11 +39,11 @@ class Config:
         "development",
     )
 
-    MONGO_URL = os.getenv("MONGO_URL")
+    MONGO_URL = get_required_env("MONGO_URL")
 
-    MONGO_DB = os.getenv("MONGO_DB")
+    MONGO_DB = get_required_env("MONGO_DB")
 
-    SECRET_KEY = os.getenv("SECRET_KEY")
+    SECRET_KEY = get_required_env("SECRET_KEY")
 
     ALGORITHM = os.getenv(
         "ALGORITHM",
