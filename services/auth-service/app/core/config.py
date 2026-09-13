@@ -43,6 +43,8 @@ class Config:
 
     MONGO_DB = get_required_env("MONGO_DB")
 
+    REDIS_URL = get_required_env("REDIS_URL")
+
     SECRET_KEY = get_required_env("SECRET_KEY")
 
     ALGORITHM = os.getenv(

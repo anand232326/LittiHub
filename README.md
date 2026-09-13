@@ -247,6 +247,7 @@ backend/
 
 
 
+# Auth Service
 
 LittiHub/
 │
