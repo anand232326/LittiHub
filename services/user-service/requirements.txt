@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-dotenv
+pymongo
+beanie
+python-jose[cryptography]
+redis
