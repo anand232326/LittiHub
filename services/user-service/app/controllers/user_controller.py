@@ -1,22 +1,15 @@
-from app.repositories.user_repository import (
-    UserRepository,
-)
-
+from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     CreateUserProfileRequest,
     UpdateUserProfileRequest,
     UserResponse,
 )
-
-from app.services.user_service import (
-    UserService,
-)
+from app.services.user_service import UserService
 
 
 class UserController:
 
     def __init__(self):
-
         user_repository = UserRepository()
 
         self.user_service = UserService(
@@ -25,11 +18,13 @@ class UserController:
 
     async def create_profile(
         self,
+        auth_user_id: str,
         request: CreateUserProfileRequest,
     ) -> UserResponse:
 
         return await self.user_service.create_profile(
-            request
+            auth_user_id=auth_user_id,
+            request=request,
         )
 
     async def get_profile(

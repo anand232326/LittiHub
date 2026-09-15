@@ -2,13 +2,8 @@ from app.core.exceptions import (
     ResourceAlreadyExistsError,
     ResourceNotFoundError,
 )
-
 from app.models.user import User
-
-from app.repositories.user_repository import (
-    UserRepository,
-)
-
+from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     CreateUserProfileRequest,
     UpdateUserProfileRequest,
@@ -18,62 +13,45 @@ from app.schemas.user import (
 
 class UserService:
 
-    def __init__(
-        self,
-        user_repository: UserRepository,
-    ):
-
+    def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
 
     async def create_profile(
         self,
+        auth_user_id: str,
         request: CreateUserProfileRequest,
     ) -> UserResponse:
 
-        existing_user = (
-            await self.user_repository
-            .get_by_auth_user_id(
-                request.auth_user_id
-            )
+        existing_user = await self.user_repository.get_by_auth_user_id(
+            auth_user_id
         )
 
         if existing_user:
-
             raise ResourceAlreadyExistsError(
                 "User profile already exists"
             )
 
         user = User(
-            auth_user_id=request.auth_user_id,
+            auth_user_id=auth_user_id,
             first_name=request.first_name,
             last_name=request.last_name,
             phone=request.phone,
         )
 
-        created_user = (
-            await self.user_repository.create(
-                user
-            )
-        )
+        created_user = await self.user_repository.create(user)
 
-        return self._to_response(
-            created_user
-        )
+        return self._to_response(created_user)
 
     async def get_profile(
         self,
         auth_user_id: str,
     ) -> UserResponse:
 
-        user = (
-            await self.user_repository
-            .get_by_auth_user_id(
-                auth_user_id
-            )
+        user = await self.user_repository.get_by_auth_user_id(
+            auth_user_id
         )
 
         if not user:
-
             raise ResourceNotFoundError(
                 "User profile not found"
             )
@@ -86,43 +64,26 @@ class UserService:
         request: UpdateUserProfileRequest,
     ) -> UserResponse:
 
-        user = (
-            await self.user_repository
-            .get_by_auth_user_id(
-                auth_user_id
-            )
+        user = await self.user_repository.get_by_auth_user_id(
+            auth_user_id
         )
 
         if not user:
-
             raise ResourceNotFoundError(
                 "User profile not found"
             )
 
-        update_data = (
-            request.model_dump(
-                exclude_unset=True
-            )
-        )
+        update_data = request.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():
-
-            setattr(
-                user,
-                field,
-                value,
-            )
+            setattr(user, field, value)
 
         return self._to_response(
-            await self.user_repository.update(
-                user
-            )
+            await self.user_repository.update(user)
         )
 
     @staticmethod
-    def _to_response(
-        user: User,
-    ) -> UserResponse:
+    def _to_response(user: User) -> UserResponse:
 
         return UserResponse(
             id=str(user.id),
