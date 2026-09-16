@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError,jwt
 from typing import Callable
 from app.core.config import Config
-from app.core.exceptions import AppException
+from app.core.exceptions import AppException,PermissionDeniedError
 
 
 security=HTTPBearer()
@@ -42,4 +42,10 @@ def require_role(*allowed_roles:str)->Callable:
         user_role=current_user.get("role")
 
         if user_role not in allowed_roles:
-            raise 
+            raise PermissionDeniedError(
+                "You do not have permission to perform this action"
+            )
+
+        return current_user
+
+    return role_checker
