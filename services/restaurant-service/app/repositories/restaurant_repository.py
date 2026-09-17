@@ -103,3 +103,16 @@ class RestaurantRepository:
         )
 
         return restaurants, total
+
+
+
+    async def restore(
+    self,
+    restaurant: Restaurant,
+    ) -> Restaurant:
+
+        restaurant.is_active = True
+
+        await restaurant.save()
+
+        return restaurant

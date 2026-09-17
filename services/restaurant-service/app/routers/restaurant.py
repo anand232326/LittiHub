@@ -5,7 +5,10 @@ from app.schemas.restaurant import (
     CreateRestaurantRequest,
     RestaurantResponse,
     UpdateRestaurantRequest,
+    RestaurantListResponse
 )
+from fastapi import APIRouter, Depends, Query
+from app.core.enums import RestaurantSortField, SortOrder
 
 
 router = APIRouter(
@@ -73,5 +76,64 @@ async def delete_restaurant(
     ),
 ):
     return await restaurant_controller.delete_restaurant(
+        restaurant_id
+    )
+
+
+
+@router.get(
+    "",
+    response_model=RestaurantListResponse,
+)
+async def list_restaurants(
+    page: int = Query(
+        default=1,
+        ge=1,
+    ),
+    page_size: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
+    city: str | None = Query(
+        default=None,
+        min_length=2,
+        max_length=100,
+    ),
+    is_active: bool | None = Query(
+        default=True,
+    ),
+    is_open: bool | None = Query(
+        default=None,
+    ),
+    search: str | None = Query(
+        default=None,
+        min_length=1,
+        max_length=100,
+    ),
+    sort_by: RestaurantSortField = Query(
+        default=RestaurantSortField.CREATED_AT,
+    ),
+    sort_order: SortOrder = Query(
+        default=SortOrder.DESC,
+    ),
+    current_user: dict = Depends(get_current_user),
+):
+    return await restaurant_controller.list_restaurants(
+        page=page,
+        page_size=page_size,
+        city=city,
+        is_active=is_active,
+        is_open=is_open,
+        search=search,
+        sort_by=sort_by,
+        sort_order=sort_order,
+    )
+
+
+
+@router.post("/{restaurant_id}/restore",response_model=RestaurantResponse,)
+async def restore_restaurant(restaurant_id: str,current_user: dict = Depends(require_role("admin")),):
+        return await restaurant_controller.restore_restaurant(
         restaurant_id
     )

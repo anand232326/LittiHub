@@ -12,6 +12,7 @@ from app.schemas.restaurant import (
     CreateRestaurantRequest,
     RestaurantResponse,
     UpdateRestaurantRequest,
+    RestaurantListResponse
 )
 
 
@@ -145,6 +146,95 @@ class RestaurantService:
         )
 
         return self._to_response(deleted_restaurant)
+
+    
+
+    async def list_restaurants(
+    self,
+    page: int,
+    page_size: int,
+    city: str | None = None,
+    is_active: bool | None = True,
+    is_open: bool | None = None,
+    search: str | None = None,
+    sort_by: RestaurantSortField = RestaurantSortField.CREATED_AT,
+    sort_order: SortOrder = SortOrder.DESC,
+    ) -> RestaurantListResponse:
+
+        skip = (page - 1) * page_size
+
+        mongo_sort_order = (
+        1
+        if sort_order == SortOrder.ASC
+        else -1
+        )
+
+        restaurants, total = (
+        await self.restaurant_repository.list_restaurants(
+            skip=skip,
+            limit=page_size,
+            city=city,
+            is_active=is_active,
+            is_open=is_open,
+            search=search,
+            sort_by=sort_by.value,
+            sort_order=mongo_sort_order,
+        )
+    )
+
+        total_pages = (
+        math.ceil(total / page_size)
+        if total > 0
+        else 0
+    )
+
+        return RestaurantListResponse(
+        items=[
+            self._to_response(restaurant)
+            for restaurant in restaurants
+        ],
+        page=page,
+        page_size=page_size,
+        total=total,
+        total_pages=total_pages,
+    )
+
+
+
+
+    async def restore_restaurant(
+    self,
+    restaurant_id: str,
+    ) -> RestaurantResponse:
+
+        restaurant = (
+        await self.restaurant_repository.get_by_id(
+            restaurant_id
+        )
+    )
+
+        if not restaurant:
+            raise ResourceNotFoundError(
+            "Restaurant not found"
+        )
+
+        if restaurant.is_active:
+            raise ResourceAlreadyExistsError(
+            "Restaurant is already active"
+        )
+
+        restored_restaurant = (
+            await self.restaurant_repository.restore(
+            restaurant
+        )
+    )
+
+        return self._to_response(
+        restored_restaurant
+    )
+
+
+    
 
     @staticmethod
     def _generate_slug(name: str) -> str:

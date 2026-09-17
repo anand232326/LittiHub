@@ -62,6 +62,19 @@ class Restaurant(Document):
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
-    class Settings:
-        name = "restaurants"
+class Settings:
+    name = "restaurants"
+
+    indexes = [
+        "name",
+        "city",
+        "is_active",
+        "is_open",
+        {
+            "key": [
+                ("slug", 1),
+            ],
+            "unique": True,
+        },
+    ]
 
