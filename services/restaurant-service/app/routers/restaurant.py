@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.controllers.restaurant_controller import RestaurantController
-from app.dependencies.auth import get_current_user, require_roles
+from app.dependencies.auth import get_current_user,require_role
 from app.schemas.restaurant import (
     CreateRestaurantRequest,
     RestaurantResponse,
@@ -24,7 +24,7 @@ restaurant_controller = RestaurantController()
 async def create_restaurant(
     request: CreateRestaurantRequest,
     current_user: dict = Depends(
-        require_roles("admin", "restaurant_admin")
+        require_role("admin", "restaurant_admin")
     ),
 ):
     return await restaurant_controller.create_restaurant(
@@ -53,7 +53,7 @@ async def update_restaurant(
     restaurant_id: str,
     request: UpdateRestaurantRequest,
     current_user: dict = Depends(
-        require_roles("admin", "restaurant_admin")
+        require_role("admin", "restaurant_admin")
     ),
 ):
     return await restaurant_controller.update_restaurant(
@@ -69,7 +69,7 @@ async def update_restaurant(
 async def delete_restaurant(
     restaurant_id: str,
     current_user: dict = Depends(
-        require_roles("admin")
+        require_role("admin")
     ),
 ):
     return await restaurant_controller.delete_restaurant(

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.controllers.user_controller import UserController
-from app.dependencies.auth import get_current_user
+from app.dependencies.auth import get_current_user,
 from app.schemas.user import (
     CreateUserProfileRequest,
     UpdateUserProfileRequest,
