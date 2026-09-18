@@ -1,5 +1,5 @@
 from typing import Optional
-
+from bson import ObjectId
 from app.models.menu_item import MenuItem
 
 
@@ -19,8 +19,11 @@ class MenuItemRepository:
         item_id: str,
     ) -> Optional[MenuItem]:
 
+        if not ObjectId.is_valid(item_id):
+            return None
+
         return await MenuItem.get(
-            item_id
+            ObjectId(item_id)
         )
 
     async def get_by_restaurant_and_id(
@@ -63,4 +66,15 @@ class MenuItemRepository:
 
         await item.save()
 
+        return item
+
+
+
+    async def restore(
+    self,
+    item: MenuItem,
+    ) -> MenuItem:
+
+        item.is_active = True
+        await item.save()
         return item

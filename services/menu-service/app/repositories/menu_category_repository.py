@@ -1,5 +1,5 @@
 from typing import Optional
-
+from bson import ObjectId
 from app.models.menu_category import MenuCategory
 
 
@@ -18,6 +18,9 @@ class MenuCategoryRepository:
         self,
         category_id: str,
     ) -> Optional[MenuCategory]:
+
+        if not ObjectId.is_valid(category_id):
+            return None
 
         return await MenuCategory.get(
             category_id
@@ -63,4 +66,14 @@ class MenuCategoryRepository:
 
         await category.save()
 
+        return category
+
+
+    async def restore(
+    self,
+    category: MenuCategory,
+    ) -> MenuCategory:
+
+        category.is_active = True
+        await category.save()
         return category
