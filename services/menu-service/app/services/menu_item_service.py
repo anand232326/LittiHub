@@ -26,13 +26,13 @@ class MenuItemService:
 
     async def create_item(
         self,
-        restaurant_id: str,
+        restaurant_id: str,category_id: str,
         request: CreateMenuItemRequest,
     ) -> MenuItemResponse:
 
         category = await self.category_repository.get_by_restaurant_and_id(
             restaurant_id=restaurant_id,
-            category_id=request.category_id,
+            category_id=category_id,
         )
 
         if not category:
@@ -46,7 +46,7 @@ class MenuItemService:
             )
 
         existing_item = await self.item_repository.get_by_category_and_name(
-            category_id=request.category_id,
+            category_id=category_id,
             name=request.name,
         )
 
@@ -57,7 +57,7 @@ class MenuItemService:
 
         item = MenuItem(
             restaurant_id=restaurant_id,
-            category_id=request.category_id,
+            category_id=category_id,
             name=request.name,
             description=request.description,
             price=request.price,
