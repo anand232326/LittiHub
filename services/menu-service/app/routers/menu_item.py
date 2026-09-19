@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-
+from app.dependencies.auth import require_roles
 from app.controllers.menu_item_controller import MenuItemController
 from app.dependencies.menu import get_menu_item_controller
 from app.schemas.menu_item import (
@@ -18,6 +18,14 @@ router = APIRouter(
     "/categories/{category_id}/items",
     response_model=MenuItemResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+            "restaurant_admin",
+        )
+    )
+]
 )
 async def create_item(
     restaurant_id: str,
@@ -48,6 +56,16 @@ async def create_item(
 @router.get(
     "/items/{item_id}",
     response_model=MenuItemResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+            "restaurant_admin",
+            "customer",
+            "delivery_agent",
+        )
+    )
+]
 )
 async def get_item(
     restaurant_id: str,
@@ -65,6 +83,14 @@ async def get_item(
 @router.patch(
     "/items/{item_id}",
     response_model=MenuItemResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+            "restaurant_admin",
+        )
+    )
+]
 )
 async def update_item(
     restaurant_id: str,
@@ -84,6 +110,13 @@ async def update_item(
 @router.delete(
     "/items/{item_id}",
     response_model=MenuItemResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+        )
+    )
+]
 )
 async def delete_item(
     restaurant_id: str,
@@ -101,6 +134,13 @@ async def delete_item(
 @router.post(
     "/items/{item_id}/restore",
     response_model=MenuItemResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+        )
+    )
+]
 )
 async def restore_item(
     restaurant_id: str,

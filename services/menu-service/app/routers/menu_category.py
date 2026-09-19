@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-
+from app.dependencies.auth import require_roles
 from app.controllers.menu_category_controller import MenuCategoryController
 from app.dependencies.menu import get_menu_category_controller
 from app.schemas.menu_category import (
@@ -18,6 +18,13 @@ router = APIRouter(
     "",
     response_model=MenuCategoryResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[
+        Depends(require_roles(
+                "admin",
+                "restaurant_admin",
+            )
+        )
+    ],
 )
 async def create_category(
     restaurant_id: str,
@@ -35,6 +42,16 @@ async def create_category(
 @router.get(
     "/{category_id}",
     response_model=MenuCategoryResponse,
+    dependencies=[
+        Depends(
+            require_roles(
+                "admin",
+                "restaurant_admin",
+                "customer",
+                "delivery_agent",
+            )
+        )
+    ],
 )
 async def get_category(
     restaurant_id: str,
@@ -52,6 +69,14 @@ async def get_category(
 @router.patch(
     "/{category_id}",
     response_model=MenuCategoryResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+            "restaurant_admin",
+        )
+    )
+]
 )
 async def update_category(
     restaurant_id: str,
@@ -71,6 +96,13 @@ async def update_category(
 @router.delete(
     "/{category_id}",
     response_model=MenuCategoryResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+        )
+    )
+]
 )
 async def delete_category(
     restaurant_id: str,
@@ -88,6 +120,13 @@ async def delete_category(
 @router.post(
     "/{category_id}/restore",
     response_model=MenuCategoryResponse,
+    dependencies=[
+    Depends(
+        require_roles(
+            "admin",
+        )
+    )
+]
 )
 async def restore_category(
     restaurant_id: str,

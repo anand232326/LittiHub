@@ -5,20 +5,12 @@ from app.models.menu_category import MenuCategory
 
 class MenuCategoryRepository:
 
-    async def create(
-        self,
-        category: MenuCategory,
-    ) -> MenuCategory:
-
+    async def create(self,category: MenuCategory,) -> MenuCategory:
         await category.insert()
-
         return category
 
-    async def get_by_id(
-        self,
-        category_id: str,
-    ) -> Optional[MenuCategory]:
 
+    async def get_by_id(self,category_id: str,) -> Optional[MenuCategory]:
         if not ObjectId.is_valid(category_id):
             return None
 
@@ -26,54 +18,36 @@ class MenuCategoryRepository:
             category_id
         )
 
-    async def get_by_restaurant_and_id(
-        self,
-        restaurant_id: str,
-        category_id: str,
-    ) -> Optional[MenuCategory]:
 
+    async def get_by_restaurant_and_id(self,restaurant_id: str,category_id: str,) -> Optional[MenuCategory]:
+        if not ObjectId.is_valid(category_id):
+            return None
+        
         return await MenuCategory.find_one(
-            MenuCategory.id == category_id,
+            MenuCategory.id == ObjectId(category_id),
             MenuCategory.restaurant_id == restaurant_id,
         )
 
-    async def get_by_name(
-        self,
-        restaurant_id: str,
-        name: str,
-    ) -> Optional[MenuCategory]:
 
+    async def get_by_name(self,restaurant_id: str,name: str,) -> Optional[MenuCategory]:
         return await MenuCategory.find_one(
             MenuCategory.restaurant_id == restaurant_id,
             MenuCategory.name == name,
         )
 
-    async def update(
-        self,
-        category: MenuCategory,
-    ) -> MenuCategory:
 
+    async def update(self,category: MenuCategory,) -> MenuCategory:
         await category.save()
-
         return category
 
-    async def delete(
-        self,
-        category: MenuCategory,
-    ) -> MenuCategory:
 
+    async def delete(self,category: MenuCategory,) -> MenuCategory:
         category.is_active = False
-
         await category.save()
-
         return category
 
 
-    async def restore(
-    self,
-    category: MenuCategory,
-    ) -> MenuCategory:
-
+    async def restore(self,category: MenuCategory,) -> MenuCategory:
         category.is_active = True
         await category.save()
         return category
