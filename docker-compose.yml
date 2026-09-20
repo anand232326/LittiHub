@@ -1,7 +1,8 @@
 services:
+
   mongodb:
     image: mongo:8
-    container_name: littihoub-mongodb
+    container_name: littihub-mongodb
     restart: unless-stopped
     ports:
       - "27018:27017"
@@ -10,16 +11,95 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
     volumes:
       - mongodb_data:/data/db
+    networks:
+      - littihub-network
+
 
   redis:
     image: redis:7-alpine
-    container_name: littihoub-redis
+    container_name: littihub-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
+    networks:
+      - littihub-network
+
+
+  auth-service:
+    build:
+      context: ./services/auth-service
+    container_name: littihub-auth-service
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    env_file:
+      - ./services/auth-service/.env
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - littihub-network
+
+
+  user-service:
+    build:
+      context: ./services/user-service
+    container_name: littihub-user-service
+    restart: unless-stopped
+    ports:
+      - "8002:8000"
+    env_file:
+      - ./services/user-service/.env
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - littihub-network
+
+
+  restaurant-service:
+    build:
+      context: ./services/restaurant-service
+    container_name: littihub-restaurant-service
+    restart: unless-stopped
+    ports:
+      - "8003:8000"
+    env_file:
+      - ./services/restaurant-service/.env
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - littihub-network
+
+
+  menu-service:
+    build:
+      context: ./services/menu-service
+    container_name: littihub-menu-service
+    restart: unless-stopped
+    ports:
+      - "8004:8000"
+    env_file:
+      - ./services/menu-service/.env
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - littihub-network
+
+
+networks:
+  littihub-network:
+    driver: bridge
+
 
 volumes:
   mongodb_data:
