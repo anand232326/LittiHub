@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-
 from dotenv import load_dotenv
 
 
@@ -59,3 +58,5 @@ class Config:
         "ALGORITHM",
         "HS256",
     )
+
+    RESTAURANT_SERVICE_URL: str

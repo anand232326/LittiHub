@@ -10,6 +10,9 @@ from app.core.exceptions import (
     ResourceAlreadyExistsError,
     ResourceNotFoundError,
 )
+from app.clients.restaurant_client import restaurant_client
+
+
 
 
 class MenuCategoryService:
@@ -20,6 +23,13 @@ class MenuCategoryService:
 
     async def create_category(self,restaurant_id: str,request: CreateMenuCategoryRequest,
     ) -> MenuCategoryResponse:
+
+        restaurant = await restaurant_client.get_restaurant(
+          restaurant_id
+        )
+
+        if restaurant is None:
+            raise ResourceNotFoundError("Restaurant not found")
 
         existing_category = await self.repository.get_by_name(
             restaurant_id=restaurant_id,
