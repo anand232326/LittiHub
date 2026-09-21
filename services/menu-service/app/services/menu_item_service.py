@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-
+from app.clients.restaurant_client import restaurant_client
 from app.models.menu_item import MenuItem
 from app.repositories.menu_item_repository import MenuItemRepository
 from app.repositories.menu_category_repository import MenuCategoryRepository
@@ -29,6 +29,15 @@ class MenuItemService:
         restaurant_id: str,category_id: str,
         request: CreateMenuItemRequest,
     ) -> MenuItemResponse:
+
+        restaurant = await restaurant_client.get_restaurant(
+            restaurant_id=restaurant_id
+        )
+
+        if restaurant is None:
+            raise ResourceNotFoundError(
+            "Restaurant not found"
+             )
 
         category = await self.category_repository.get_by_restaurant_and_id(
             restaurant_id=restaurant_id,
