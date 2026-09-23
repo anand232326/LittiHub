@@ -94,7 +94,24 @@ services:
       - redis
     networks:
       - littihub-network
-
+  
+  order-service:
+    build:
+      context: ./services/order-service
+    container_name: littihub-order-service
+    restart: unless-stopped
+    ports:
+    - "8005:8000"
+    env_file:
+    - ./services/order-service/.env
+    depends_on:
+      - mongodb
+      - redis
+      - user-service
+      - restaurant-service
+      - menu-service
+    networks:
+      - littihub-network
 
 networks:
   littihub-network:
@@ -104,3 +121,6 @@ networks:
 volumes:
   mongodb_data:
   redis_data:
+
+
+ 
