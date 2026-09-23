@@ -25,21 +25,13 @@ class OrderItemResponse(BaseModel):
 
 class OrderResponse(BaseModel):
     id: str
-
     user_id: str
-
     restaurant_id: str
-
     items: list[OrderItemResponse]
-
     subtotal: float
-
     delivery_fee: float
-
     total_amount: float
-
     status: OrderStatus
-
     delivery_address: str
     created_at: datetime
     updated_at: datetime
