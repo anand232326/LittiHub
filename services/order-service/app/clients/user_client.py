@@ -1,5 +1,5 @@
 import httpx
-form app.core.config import config
+from app.core.config import config
 
 
 class UserClient:

@@ -1,18 +1,30 @@
+
 from datetime import datetime
 from pydantic import BaseModel, Field
 from app.core.enums import OrderStatus
 
 
-
 class CreateOrderItemRequest(BaseModel):
     menu_item_id: str
-    quantity: int = Field(gt=0,le=20,)
+    quantity: int = Field(
+        gt=0,
+        le=20,
+    )
 
 
 class CreateOrderRequest(BaseModel):
     restaurant_id: str
-    items: list[CreateOrderItemRequest] = Field(min_length=1,)
-    delivery_address: str = Field(min_length=5,max_length=500,)
+    items: list[CreateOrderItemRequest] = Field(
+        min_length=1,
+    )
+    delivery_address: str = Field(
+        min_length=5,
+        max_length=500,
+    )
+
+
+class UpdateOrderStatusRequest(BaseModel):
+    status: OrderStatus
 
 
 class OrderItemResponse(BaseModel):

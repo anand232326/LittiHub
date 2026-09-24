@@ -2,7 +2,7 @@
 
 import httpx
 
-from app.core.config import settings
+from app.core.config import config
 
 
 class RestaurantClient:
@@ -13,7 +13,7 @@ class RestaurantClient:
     ) -> dict | None:
 
         url = (
-            f"{settings.RESTAURANT_SERVICE_URL}"
+            f"{config.RESTAURANT_SERVICE_URL}"
             f"/api/v1/restaurants/{restaurant_id}"
         )
 
