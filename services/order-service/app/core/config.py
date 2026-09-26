@@ -35,6 +35,11 @@ class Config:
         "1.0.0",
     )
 
+    LOG_LEVEL = os.getenv(
+        "LOG_LEVEL",
+        
+    )
+
     ENVIRONMENT = os.getenv(
         "ENVIRONMENT",
         "development",
@@ -72,6 +77,8 @@ class Config:
     MENU_SERVICE_URL = get_required_env(
         "MENU_SERVICE_URL"
     )
+
+  
 
 
 config = Config()

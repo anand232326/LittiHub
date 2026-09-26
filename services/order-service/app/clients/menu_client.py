@@ -1,7 +1,5 @@
-# services/order-service/app/clients/menu_client.py
 
 import httpx
-
 from app.core.config import config
 
 
