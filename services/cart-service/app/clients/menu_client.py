@@ -17,14 +17,19 @@ class MenuClient:
         self,
         restaurant_id: str,
         item_id: str,
+        access_token: str,
     ) -> dict:
 
         url = (
             f"{self.base_url}"
             f"/api/v1/restaurants/"
-            f"{restaurant_id}/menu-items/"
+            f"{restaurant_id}/items/"
             f"{item_id}"
         )
+
+        headers = {
+            "Authorization": f"Bearer {access_token}"
+        }
 
         try:
 
@@ -33,14 +38,14 @@ class MenuClient:
             ) as client:
 
                 response = await client.get(
-                    url
+                    url,
+                    headers=headers,
                 )
 
         except httpx.RequestError as exc:
 
             raise ServiceCommunicationError(
-                "Unable to communicate with "
-                "Menu Service"
+                "Unable to communicate with Menu Service"
             ) from exc
 
         if response.status_code == 404:
@@ -58,11 +63,10 @@ class MenuClient:
         if response.status_code >= 400:
 
             raise ServiceCommunicationError(
-                "Menu Service request failed"
+                "Menu Service rejected the request"
             )
 
         return response.json()
 
 
 menu_client = MenuClient()
-

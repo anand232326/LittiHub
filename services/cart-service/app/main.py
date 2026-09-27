@@ -1,5 +1,8 @@
+
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+
 from app.core.config import Config
 from app.core.database import (
     check_redis_connection,
@@ -22,7 +25,6 @@ async def lifespan(app: FastAPI):
         logger.error(
             "Redis connection failed"
         )
-
     else:
         logger.info(
             "Redis connection successful"
@@ -43,7 +45,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
 app.include_router(
     cart_router
 )
@@ -59,3 +60,4 @@ async def health_check():
         "status": "ok",
         "service": Config.APP_NAME,
     }
+
