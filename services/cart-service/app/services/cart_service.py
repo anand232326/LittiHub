@@ -34,16 +34,19 @@ class CartService:
     async def add_item(self,user_id: str,request: AddCartItemRequest,
         access_token: str,
     ) -> CartResponse:
+        
+        async with self.repository.get_cart_lock(
+        user_id):
 
-        # 1. Get trusted menu item data
-        menu_item = await menu_client.get_menu_item(
+            # 1. Get trusted menu item data
+            menu_item = await menu_client.get_menu_item(
             restaurant_id=request.restaurant_id,
             item_id=request.menu_item_id,
             access_token=access_token,
-        )
+            )
 
-        # 2. Validate menu item state
-        self._validate_menu_item(menu_item)
+            # 2. Validate menu item state
+            self._validate_menu_item(menu_item)
 
         # 3. Get existing cart
         cart = await self.repository.get_cart(

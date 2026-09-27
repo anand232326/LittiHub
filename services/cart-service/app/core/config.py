@@ -45,6 +45,13 @@ class Config:
         "REDIS_URL"
     )
 
+    CART_TTL_SECONDS = int(
+        os.getenv( 
+            "CART_TTL_SECONDS", 
+            "604800", 
+            )
+        )
+
     SECRET_KEY = get_required_env(
         "SECRET_KEY"
     )
