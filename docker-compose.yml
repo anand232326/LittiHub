@@ -113,6 +113,23 @@ services:
     networks:
       - littihub-network
 
+  cart-service:
+    build:
+      context: ./services/cart-service
+      dockerfile: Dockerfile
+    container_name: littihub-cart-service
+    restart: unless-stopped
+    env_file:
+      - ./services/cart-service/.env
+    ports:
+      - "8006:8000"
+    depends_on:
+      - redis
+      - menu-service
+    networks:
+      - littihub-network
+            
+
 networks:
   littihub-network:
     driver: bridge
