@@ -21,11 +21,7 @@ class CartService:
     ):
         self.repository = repository
 
-    async def get_cart(
-        self,
-        user_id: str,
-    ) -> CartResponse:
-
+    async def get_cart(self,user_id: str,) -> CartResponse:
         cart = await self.repository.get_cart(
             user_id
         )
