@@ -1,4 +1,4 @@
-
+from typing import Any
 from pydantic import BaseModel, Field
 
 
@@ -33,3 +33,10 @@ class CartResponse(BaseModel):
     subtotal: float
     total_items: int
 
+
+class CartCheckoutResponse(BaseModel):
+    user_id: str
+    restaurant_id: str
+    items: list[Any] = []  # You can replace Any with a specific Item schema later
+    subtotal: float
+    total_items: int

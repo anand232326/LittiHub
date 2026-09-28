@@ -15,13 +15,21 @@ from app.schemas.cart import (
 
 class CartService:
 
-    def __init__(self,repository: CartRepository,):
+    def __init__(
+        self,
+        repository: CartRepository,
+    ):
         self.repository = repository
 
+    async def get_cart(
+        self,
+        user_id: str,
+    ) -> CartResponse:
 
+        cart = await self.repository.get_cart(
+            user_id=user_id
+        )
 
-    async def get_cart(self,user_id: str,) -> CartResponse:
-        cart = await self.repository.get_cart(user_id=user_id)
         if cart is None:
             cart = Cart(
                 user_id=user_id
@@ -31,91 +39,96 @@ class CartService:
 
 
 
-    async def add_item(self,user_id: str,request: AddCartItemRequest,
+    async def add_item(
+        self,
+        user_id: str,
+        request: AddCartItemRequest,
         access_token: str,
     ) -> CartResponse:
-        
-        async with self.repository.get_cart_lock(
-        user_id):
 
-            # 1. Get trusted menu item data
+        async with self.repository.get_cart_lock(
+            user_id
+        ):
+
             menu_item = await menu_client.get_menu_item(
-            restaurant_id=request.restaurant_id,
-            item_id=request.menu_item_id,
-            access_token=access_token,
+                restaurant_id=request.restaurant_id,
+                item_id=request.menu_item_id,
+                access_token=access_token,
             )
 
-            # 2. Validate menu item state
-            self._validate_menu_item(menu_item)
+            self._validate_menu_item(
+                menu_item
+            )
 
-        # 3. Get existing cart
-        cart = await self.repository.get_cart(
-            user_id=user_id
-        )
+            cart = await self.repository.get_cart(
+                user_id=user_id
+            )
 
-        # 4. Create cart if it does not exist
-        if cart is None:
-            cart = Cart(
-                user_id=user_id,
+            if cart is None:
+                cart = Cart(
+                    user_id=user_id,
+                    restaurant_id=request.restaurant_id,
+                )
+
+            self._validate_restaurant(
+                cart=cart,
                 restaurant_id=request.restaurant_id,
             )
 
-        # 5. Enforce one restaurant per cart
-        self._validate_restaurant(
-            cart=cart,
-            restaurant_id=request.restaurant_id,
-        )
-
-        # 6. Find existing item
-        existing_item = self._find_item(
-            cart=cart,
-            menu_item_id=request.menu_item_id,
-        )
-
-        price = float(menu_item["price"])
-        name = menu_item["name"]
-
-        # 7. Update existing item or add new item
-        if existing_item:
-
-            new_quantity = (
-                existing_item.quantity
-                + request.quantity
+            existing_item = self._find_item(
+                cart=cart,
+                menu_item_id=request.menu_item_id,
             )
 
-            if new_quantity > 20:
-                raise InvalidRequestError(
-                    "Maximum quantity for a menu item is 20"
+            price = float(
+                menu_item["price"]
+            )
+
+            name = menu_item["name"]
+
+            if existing_item:
+
+                new_quantity = (
+                    existing_item.quantity
+                    + request.quantity
                 )
 
-            existing_item.quantity = new_quantity
-            existing_item.name = name
-            existing_item.price = price
-            existing_item.total_price = (
-                price * new_quantity
-            )
+                if new_quantity > 20:
+                    raise InvalidRequestError(
+                        "Maximum quantity for a menu item is 20"
+                    )
 
-        else:
-
-            cart.items.append(
-                CartItem(
-                    menu_item_id=request.menu_item_id,
-                    name=name,
-                    price=price,
-                    quantity=request.quantity,
-                    total_price=price * request.quantity,
+                existing_item.quantity = new_quantity
+                existing_item.name = name
+                existing_item.price = price
+                existing_item.total_price = (
+                    price * new_quantity
                 )
+
+            else:
+
+                cart.items.append(
+                    CartItem(
+                        menu_item_id=request.menu_item_id,
+                        name=name,
+                        price=price,
+                        quantity=request.quantity,
+                        total_price=(
+                            price * request.quantity
+                        ),
+                    )
+                )
+
+            self._recalculate(cart)
+
+            cart = await self.repository.save_cart(
+                cart
             )
 
-        # 8. Recalculate cart totals
-        self._recalculate(cart)
+            return self._to_response(cart)
 
-        # 9. Save cart in Redis
-        cart = await self.repository.save_cart(
-            cart
-        )
 
-        return self._to_response(cart)
+
 
     async def update_item(
         self,
@@ -125,61 +138,65 @@ class CartService:
         access_token: str,
     ) -> CartResponse:
 
-        # 1. Get cart
-        cart = await self.repository.get_cart(
-            user_id=user_id
-        )
+        async with self.repository.get_cart_lock(
+            user_id
+        ):
 
-        if cart is None:
-            raise ResourceNotFoundError(
-                "Cart not found"
+            cart = await self.repository.get_cart(
+                user_id=user_id
             )
 
-        if cart.restaurant_id is None:
-            raise InvalidRequestError(
-                "Cart does not have a restaurant"
+            if cart is None:
+                raise ResourceNotFoundError(
+                    "Cart not found"
+                )
+
+            if cart.restaurant_id is None:
+                raise InvalidRequestError(
+                    "Cart does not have a restaurant"
+                )
+
+            item = self._find_item(
+                cart=cart,
+                menu_item_id=menu_item_id,
             )
 
-        # 2. Find item
-        item = self._find_item(
-            cart=cart,
-            menu_item_id=menu_item_id,
-        )
+            if item is None:
+                raise ResourceNotFoundError(
+                    "Menu item not found in cart"
+                )
 
-        if item is None:
-            raise ResourceNotFoundError(
-                "Menu item not found in cart"
+            menu_item = await menu_client.get_menu_item(
+                restaurant_id=cart.restaurant_id,
+                item_id=menu_item_id,
+                access_token=access_token,
             )
 
-        # 3. Get current menu item data
-        menu_item = await menu_client.get_menu_item(
-            restaurant_id=cart.restaurant_id,
-            item_id=menu_item_id,
-            access_token=access_token,
-        )
+            self._validate_menu_item(
+                menu_item
+            )
 
-        # 4. Validate current menu item state
-        self._validate_menu_item(menu_item)
+            price = float(
+                menu_item["price"]
+            )
 
-        # 5. Update item using trusted menu data
-        price = float(menu_item["price"])
+            item.quantity = request.quantity
+            item.name = menu_item["name"]
+            item.price = price
+            item.total_price = (
+                price * request.quantity
+            )
 
-        item.quantity = request.quantity
-        item.name = menu_item["name"]
-        item.price = price
-        item.total_price = (
-            price * request.quantity
-        )
+            self._recalculate(cart)
 
-        # 6. Recalculate cart totals
-        self._recalculate(cart)
+            cart = await self.repository.save_cart(
+                cart
+            )
 
-        # 7. Save updated cart
-        cart = await self.repository.save_cart(
-            cart
-        )
+            return self._to_response(cart)
 
-        return self._to_response(cart)
+
+
 
     async def remove_item(
         self,
@@ -187,63 +204,96 @@ class CartService:
         menu_item_id: str,
     ) -> CartResponse:
 
-        # 1. Get cart
+        async with self.repository.get_cart_lock(
+            user_id
+        ):
+
+            cart = await self.repository.get_cart(
+                user_id=user_id
+            )
+
+            if cart is None:
+                raise ResourceNotFoundError(
+                    "Cart not found"
+                )
+
+            item = self._find_item(
+                cart=cart,
+                menu_item_id=menu_item_id,
+            )
+
+            if item is None:
+                raise ResourceNotFoundError(
+                    "Menu item not found in cart"
+                )
+
+            cart.items = [
+                cart_item
+                for cart_item in cart.items
+                if cart_item.menu_item_id != menu_item_id
+            ]
+
+            if not cart.items:
+
+                await self.repository.delete_cart(
+                    user_id=user_id
+                )
+
+                return self._to_response(
+                    Cart(
+                        user_id=user_id
+                    )
+                )
+
+            self._recalculate(cart)
+
+            cart = await self.repository.save_cart(
+                cart
+            )
+
+            return self._to_response(cart)
+
+
+
+    async def get_cart_for_checkout(
+    self,
+    user_id: str,
+    ) -> CartResponse:
+
         cart = await self.repository.get_cart(
-            user_id=user_id
+        user_id=user_id
         )
 
         if cart is None:
             raise ResourceNotFoundError(
-                "Cart not found"
-            )
-
-        # 2. Check item exists
-        item = self._find_item(
-            cart=cart,
-            menu_item_id=menu_item_id,
+            "Cart not found"
         )
 
-        if item is None:
-            raise ResourceNotFoundError(
-                "Menu item not found in cart"
-            )
-
-        # 3. Remove item
-        cart.items = [
-            cart_item
-            for cart_item in cart.items
-            if cart_item.menu_item_id != menu_item_id
-        ]
-
-        # 4. If cart becomes empty, delete Redis key
         if not cart.items:
-
-            await self.repository.delete_cart(
-                user_id=user_id
-            )
-
-            return self._to_response(
-                Cart(user_id=user_id)
-            )
-
-        # 5. Recalculate totals
-        self._recalculate(cart)
-
-        # 6. Save cart
-        cart = await self.repository.save_cart(
-            cart
+            raise InvalidRequestError(
+            "Cart is empty"
         )
 
         return self._to_response(cart)
+
+    
+
 
     async def clear_cart(
         self,
         user_id: str,
     ) -> None:
 
-        await self.repository.delete_cart(
-            user_id=user_id
-        )
+        async with self.repository.get_cart_lock(
+            user_id
+        ):
+
+            await self.repository.delete_cart(
+                user_id=user_id
+            )
+
+
+
 
     @staticmethod
     def _validate_menu_item(
@@ -267,13 +317,10 @@ class CartService:
     ) -> None:
 
         if cart.restaurant_id is None:
-
             cart.restaurant_id = restaurant_id
-
             return
 
         if cart.restaurant_id != restaurant_id:
-
             raise InvalidRequestError(
                 "Cart can contain items from only one restaurant"
             )

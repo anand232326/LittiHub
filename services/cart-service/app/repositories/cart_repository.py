@@ -59,6 +59,7 @@ class CartRepository:
         )
 
 
+
     def get_cart_lock( self, user_id: str, ): 
         lock_key = self._get_lock_key( user_id ) 
         return redis_client.lock( 

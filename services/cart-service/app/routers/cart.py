@@ -95,6 +95,22 @@ async def remove_item(
     )
 
 
+@router.get(
+    "/checkout",
+    response_model=CartResponse,
+)
+async def get_cart_for_checkout(
+    current_user: dict = Depends(
+        get_current_user
+    ),
+) -> CartResponse:
+
+    return await cart_controller.get_cart_for_checkout(
+        user_id=current_user["user_id"],
+    )
+
+
+
 @router.delete(
     "",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -108,3 +124,5 @@ async def clear_cart(
     await cart_controller.clear_cart(
         user_id=current_user["user_id"],
     )
+
+

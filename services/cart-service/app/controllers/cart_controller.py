@@ -46,6 +46,7 @@ class CartController:
             access_token=access_token,
         )
 
+
     async def remove_item(
         self,
         user_id: str,
@@ -57,6 +58,19 @@ class CartController:
             menu_item_id=menu_item_id,
         )
 
+
+
+    async def get_cart_for_checkout(
+    self,
+    user_id: str,
+    ) -> CartResponse:
+
+        return await cart_service.get_cart_for_checkout(
+        user_id=user_id
+        )
+
+
+    
     async def clear_cart(
         self,
         user_id: str,
