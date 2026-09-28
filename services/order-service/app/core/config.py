@@ -78,6 +78,10 @@ class Config:
         "MENU_SERVICE_URL"
     )
 
+    CART_SERVICE_URL = get_required_env(
+    "CART_SERVICE_URL"
+    )
+
   
 
 
