@@ -1,11 +1,11 @@
-
+from fastapi import Depends
 from fastapi import APIRouter, Depends, status
 
 from app.controllers.order_controller import (
     order_controller,
 )
 from app.dependencies.auth import (
-    get_current_user,
+    get_current_user,get_access_token
 )
 from app.schemas.order import (
     CreateOrderRequest,
@@ -30,11 +30,13 @@ async def create_order(
     current_user: dict = Depends(
         get_current_user
     ),
+    access_token: str = Depends( get_access_token ),
 ) -> OrderResponse:
 
     return await order_controller.create_order(
         user_id=current_user["user_id"],
         request=request,
+        access_token=access_token,
     )
 
 

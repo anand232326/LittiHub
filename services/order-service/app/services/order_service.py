@@ -1,5 +1,6 @@
 
 from app.clients.menu_client import menu_client
+from app.clients.cart_client import cart_client
 from app.clients.restaurant_client import restaurant_client
 from app.clients.user_client import user_client
 from app.core.enums import OrderStatus
@@ -24,7 +25,27 @@ class OrderService:
         self,
         user_id: str,
         request: CreateOrderRequest,
+        access_token: str,
     ) -> OrderResponse:
+
+        cart = await cart_client.get_cart( 
+            user_id=user_id, 
+            access_token=access_token, 
+            )
+
+        if not cart.get("items"): 
+            raise InvalidRequestError( 
+                "Cannot create an order from an empty cart" 
+                ) 
+        if not cart.get("restaurant_id"): 
+            raise InvalidRequestError( 
+                "Cart is not associated with a restaurant" 
+                )
+
+        if ( request.restaurant_id != cart["restaurant_id"] ): 
+            raise InvalidRequestError( 
+                "Restaurant does not match the cart"
+                )
 
         user = await user_client.get_user(
             user_id=user_id

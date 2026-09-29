@@ -13,12 +13,15 @@ class OrderController:
         self,
         user_id: str,
         request: CreateOrderRequest,
+        access_token: str,
     ) -> OrderResponse:
 
         return await order_service.create_order(
             user_id=user_id,
             request=request,
+            access_token=access_token,
         )
+
 
     async def get_my_orders(
         self,

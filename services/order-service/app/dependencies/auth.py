@@ -1,6 +1,9 @@
 
 from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import (
+    HTTPAuthorizationCredentials,
+    HTTPBearer,
+)
 from jose import JWTError, jwt
 
 from app.core.config import config
@@ -8,6 +11,15 @@ from app.core.exceptions import PermissionDeniedError
 
 
 security = HTTPBearer()
+
+
+async def get_access_token(
+    credentials: HTTPAuthorizationCredentials = Depends(
+        security
+    ),
+) -> str:
+
+    return credentials.credentials
 
 
 async def get_current_user(
@@ -19,6 +31,7 @@ async def get_current_user(
     token = credentials.credentials
 
     try:
+
         payload = jwt.decode(
             token,
             config.SECRET_KEY,
@@ -26,6 +39,7 @@ async def get_current_user(
         )
 
     except JWTError:
+
         raise PermissionDeniedError(
             "Invalid or expired access token"
         )
@@ -34,6 +48,7 @@ async def get_current_user(
     role = payload.get("role")
 
     if not user_id:
+
         raise PermissionDeniedError(
             "Invalid access token"
         )
