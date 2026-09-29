@@ -179,6 +179,8 @@ class OrderService:
             order
         )
 
+
+
     async def get_my_orders(
         self,
         user_id: str,
@@ -192,6 +194,8 @@ class OrderService:
             self._to_response(order)
             for order in orders
         ]
+
+
 
     async def get_order_by_id(
         self,
@@ -217,6 +221,8 @@ class OrderService:
         return self._to_response(
             order
         )
+
+
 
     async def update_order_status(
         self,
@@ -259,6 +265,9 @@ class OrderService:
         return self._to_response(
             order
         )
+
+
+
 
     def _get_allowed_statuses(
         self,
@@ -350,6 +359,9 @@ class OrderService:
 
         return set()
 
+
+
+
     def _calculate_delivery_fee(
         self,
         subtotal: float,
@@ -359,6 +371,9 @@ class OrderService:
             return 0.0
 
         return 40.0
+
+
+
 
     def _to_response(
         self,
@@ -387,6 +402,7 @@ class OrderService:
             created_at=order.created_at,
             updated_at=order.updated_at,
         )
+
 
 
 order_service = OrderService()
