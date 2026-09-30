@@ -2,7 +2,6 @@ from app.models.order import Order
 
 
 
-
 class OrderRepository:
 
 
@@ -24,6 +23,15 @@ class OrderRepository:
         .to_list()
     )
 
+
+    async def find_by_idempotency_key( self, user_id: str, idempotency_key: str, ) -> Order | None: 
+        return await Order.find_one( 
+            { 
+                "user_id": user_id, 
+                "idempotency_key": idempotency_key, 
+                } 
+                
+        )
 
 
 

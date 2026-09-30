@@ -1,6 +1,4 @@
-from fastapi import Depends
-from fastapi import APIRouter, Depends, status
-
+from fastapi import APIRouter, Depends, Header, status
 from app.controllers.order_controller import (
     order_controller,
 )
@@ -31,12 +29,18 @@ async def create_order(
         get_current_user
     ),
     access_token: str = Depends( get_access_token ),
+    idempotency_key: str = Header( 
+        ...,
+        alias="Idempotency-Key", 
+        min_length=1, 
+        max_length=255, ),
 ) -> OrderResponse:
 
     return await order_controller.create_order(
         user_id=current_user["user_id"],
         request=request,
         access_token=access_token,
+        idempotency_key=idempotency_key,
     )
 
 

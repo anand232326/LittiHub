@@ -1,4 +1,6 @@
 
+from pymongo.errors import DuplicateKeyError
+
 from app.clients.menu_client import menu_client
 from app.clients.cart_client import cart_client
 from app.clients.restaurant_client import restaurant_client
@@ -22,162 +24,259 @@ from app.schemas.order import (
 class OrderService:
 
     async def create_order(
-        self,
-        user_id: str,
-        request: CreateOrderRequest,
-        access_token: str,
+    self,
+    user_id: str,
+    request: CreateOrderRequest,
+    access_token: str,
+    idempotency_key: str,
     ) -> OrderResponse:
 
-        cart = await cart_client.get_cart( 
-            user_id=user_id, 
-            access_token=access_token, 
-            )
+        existing_order = await order_repository.find_by_idempotency_key(
+        user_id=user_id,
+        idempotency_key=idempotency_key,
+        )
 
-        if not cart.get("items"): 
-            raise InvalidRequestError( 
-                "Cannot create an order from an empty cart" 
-                ) 
-        if not cart.get("restaurant_id"): 
-            raise InvalidRequestError( 
-                "Cart is not associated with a restaurant" 
-                )
+        if existing_order:
+            return self._to_response(existing_order)
 
-        if ( request.restaurant_id != cart["restaurant_id"] ): 
-            raise InvalidRequestError( 
-                "Restaurant does not match the cart"
-                )
+    # --------------------------------------------------
+    # 1. Get current cart
+    # --------------------------------------------------
+
+        cart = await cart_client.get_cart(
+        user_id=user_id,
+        access_token=access_token,
+        )
+
+        if not cart.get("items"):
+            raise InvalidRequestError(
+            "Cannot create an order from an empty cart"
+        )
+
+        restaurant_id = cart.get(
+        "restaurant_id"
+        )
+
+        if not restaurant_id:
+            raise InvalidRequestError(
+            "Cart is not associated with a restaurant"
+        )
+
+    # --------------------------------------------------
+    # 2. Validate requested restaurant
+    # --------------------------------------------------
+
+        if request.restaurant_id != restaurant_id:
+            raise InvalidRequestError(
+            "Restaurant does not match the cart"
+        )
+
+    # --------------------------------------------------
+    # 3. Validate user
+    # --------------------------------------------------
 
         user = await user_client.get_user(
-            user_id=user_id
+        user_id=user_id
         )
 
         if user is None:
             raise ResourceNotFoundError(
-                "User not found"
-            )
+            "User not found"
+        )
+
+    # --------------------------------------------------
+    # 4. Validate restaurant
+    # --------------------------------------------------
 
         restaurant = await restaurant_client.get_restaurant(
-            restaurant_id=request.restaurant_id
+        restaurant_id=restaurant_id
         )
 
         if restaurant is None:
             raise ResourceNotFoundError(
-                "Restaurant not found"
+            "Restaurant not found"
+        )
+
+        if not restaurant.get(
+        "is_active",
+        False,
+        ):
+            raise InvalidRequestError(
+            "Restaurant is not active"
             )
 
         if not restaurant.get(
-            "is_active",
-            False,
+        "is_open",
+        False,
         ):
             raise InvalidRequestError(
-                "Restaurant is not active"
-            )
+            "Restaurant is currently closed"
+        )
 
-        if not restaurant.get(
-            "is_open",
-            False,
-        ):
-            raise InvalidRequestError(
-                "Restaurant is currently closed"
-            )
+    # --------------------------------------------------
+    # 5. Validate cart items against Menu Service
+    # --------------------------------------------------
 
         order_items: list[OrderItem] = []
+
         subtotal = 0.0
 
-        for requested_item in request.items:
+        for cart_item in cart["items"]:
 
             menu_item = await menu_client.get_menu_item(
-                restaurant_id=request.restaurant_id,
-                item_id=requested_item.menu_item_id,
+            restaurant_id=restaurant_id,
+            item_id=cart_item["menu_item_id"],
+            access_token=access_token,
             )
 
             if menu_item is None:
                 raise ResourceNotFoundError(
-                    f"Menu item "
-                    f"'{requested_item.menu_item_id}' "
-                    f"not found"
-                )
+                f"Menu item "
+                f"'{cart_item['menu_item_id']}' "
+                f"not found"
+            )
+
+        # ----------------------------------------------
+        # Verify restaurant ownership
+        # ----------------------------------------------
 
             if (
-                menu_item.get("restaurant_id")
-                != request.restaurant_id
+            menu_item.get("restaurant_id")
+            != restaurant_id
             ):
                 raise InvalidRequestError(
-                    "Menu item does not belong "
-                    "to this restaurant"
-                )
+                "Menu item does not belong "
+                "to this restaurant"
+            )
+
+        # ----------------------------------------------
+        # Verify active status
+        # ----------------------------------------------
 
             if not menu_item.get(
-                "is_active",
-                False,
+            "is_active",
+            False,
             ):
                 raise InvalidRequestError(
-                    f"Menu item "
-                    f"'{menu_item.get('name')}' "
-                    f"is inactive"
-                )
+                f"Menu item "
+                f"'{menu_item.get('name')}' "
+                f"is inactive"
+            )
+
+        # ----------------------------------------------
+        # Verify availability
+        # ----------------------------------------------
 
             if not menu_item.get(
-                "is_available",
-                False,
+            "is_available",
+            False,
             ):
                 raise InvalidRequestError(
-                    f"Menu item "
-                    f"'{menu_item.get('name')}' "
-                    f"is currently unavailable"
-                )
+                f"Menu item "
+                f"'{menu_item.get('name')}' "
+                f"is currently unavailable"
+            )
+
+        # ----------------------------------------------
+        # IMPORTANT:
+        # Use CURRENT menu price, not cart price
+        # ----------------------------------------------
 
             unit_price = float(
-                menu_item["price"]
-            )
+            menu_item["price"]
+           )
 
-            quantity = requested_item.quantity
+            quantity = cart_item["quantity"]
 
             item_total = (
-                unit_price * quantity
+            unit_price * quantity
             )
 
-            order_item = OrderItem(
-                menu_item_id=menu_item["id"],
-                name=menu_item["name"],
-                quantity=quantity,
-                unit_price=unit_price,
-                total_price=item_total,
-            )
+        order_item = OrderItem(
+            menu_item_id=menu_item["id"],
+            name=menu_item["name"],
+            quantity=quantity,
+            unit_price=unit_price,
+            total_price=item_total,
+        )
 
-            order_items.append(
-                order_item
-            )
+        order_items.append(
+            order_item
+        )
 
-            subtotal += item_total
+        subtotal += item_total
+
+    # --------------------------------------------------
+    # 6. Calculate delivery fee
+    # --------------------------------------------------
 
         delivery_fee = (
-            self._calculate_delivery_fee(
-                subtotal=subtotal
-            )
+        self._calculate_delivery_fee(
+            subtotal=subtotal
         )
+        )
+
+    # --------------------------------------------------
+    # 7. Calculate final amount
+    # --------------------------------------------------
 
         total_amount = (
-            subtotal + delivery_fee
+        subtotal
+        + delivery_fee
         )
+
+    # --------------------------------------------------
+    # 8. Create order
+    # --------------------------------------------------
 
         order = Order(
-            user_id=user_id,
-            restaurant_id=request.restaurant_id,
-            items=order_items,
-            subtotal=subtotal,
-            delivery_fee=delivery_fee,
-            total_amount=total_amount,
-            delivery_address=request.delivery_address,
+        user_id=user_id,
+        restaurant_id=restaurant_id,
+        idempotency_key=idempotency_key,
+        items=order_items,
+        subtotal=subtotal,
+        delivery_fee=delivery_fee,
+        total_amount=total_amount,
+        delivery_address=request.delivery_address,
         )
 
-        order = await order_repository.create(
-            order
+        
+        try:
+            order = await order_repository.create(
+                 order
+            )
+
+        except DuplicateKeyError:
+
+            existing_order = (
+                await order_repository.find_by_idempotency_key(
+                    user_id=user_id,
+                    idempotency_key=idempotency_key,
+                )
+            )
+
+            if existing_order is None:
+                raise
+
+            return self._to_response(
+            existing_order
+            )
+
+
+
+    # --------------------------------------------------
+    # 9. Clear cart AFTER successful order creation
+    # --------------------------------------------------
+
+        await cart_client.clear_cart(
+        user_id=user_id,
+        access_token=access_token,
         )
 
         return self._to_response(
-            order
-        )
+        order
+       )
+
 
 
 

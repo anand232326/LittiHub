@@ -14,12 +14,14 @@ class OrderController:
         user_id: str,
         request: CreateOrderRequest,
         access_token: str,
+        idempotency_key: str,
     ) -> OrderResponse:
 
         return await order_service.create_order(
             user_id=user_id,
             request=request,
             access_token=access_token,
+            idempotency_key=idempotency_key,
         )
 
 
