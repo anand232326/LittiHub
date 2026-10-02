@@ -1,6 +1,6 @@
 
 from datetime import datetime, timezone
-
+from pymongo import IndexModel
 from beanie import Document
 from pydantic import BaseModel, Field
 
@@ -43,14 +43,13 @@ class Order(Document):
 
     class Settings:
         name = "orders"
-
         indexes = [
-            {
-                "key": [
+            IndexModel(
+                [
                     ("user_id", 1),
                     ("idempotency_key", 1),
                 ],
-                "unique": True,
-            }
+                unique=True,
+            )
         ]
 
