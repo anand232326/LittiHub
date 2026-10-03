@@ -18,7 +18,6 @@ class OrderItem(BaseModel):
 class Order(Document):
     user_id: str
     restaurant_id: str
-
     # Idempotency
     idempotency_key: str
     idempotency_request_hash: str
