@@ -1,14 +1,19 @@
-from fastapi import APIRouter, status
+
+from fastapi import APIRouter, Depends, status
+
 from app.controllers.inventory_controller import (
     inventory_controller,
+)
+from app.dependencies.auth import (
+    get_current_user,
+    require_admin,
+    require_restaurant_owner,
 )
 from app.schemas.inventory import (
     CreateInventoryRequest,
     InventoryResponse,
     UpdateInventoryRequest,
 )
-
-
 
 
 router = APIRouter(
@@ -24,6 +29,9 @@ router = APIRouter(
 )
 async def create_inventory(
     request: CreateInventoryRequest,
+    current_user: dict = Depends(
+        require_admin
+    ),
 ) -> InventoryResponse:
 
     return await inventory_controller.create_inventory(
@@ -38,6 +46,9 @@ async def create_inventory(
 )
 async def get_inventory(
     inventory_id: str,
+    current_user: dict = Depends(
+        get_current_user
+    ),
 ) -> InventoryResponse:
 
     return await inventory_controller.get_inventory(
@@ -53,6 +64,9 @@ async def get_inventory(
 async def get_inventory_by_menu_item(
     restaurant_id: str,
     menu_item_id: str,
+    current_user: dict = Depends(
+        get_current_user
+    ),
 ) -> InventoryResponse:
 
     return await (
@@ -72,6 +86,9 @@ async def get_inventory_by_menu_item(
 async def update_inventory_quantity(
     inventory_id: str,
     request: UpdateInventoryRequest,
+    current_user: dict = Depends(
+        require_restaurant_owner
+    ),
 ) -> InventoryResponse:
 
     return await inventory_controller.update_quantity(
@@ -88,6 +105,9 @@ async def update_inventory_quantity(
 async def reserve_inventory(
     inventory_id: str,
     quantity: int,
+    current_user: dict = Depends(
+        get_current_user
+    ),
 ) -> InventoryResponse:
 
     return await inventory_controller.reserve_stock(
@@ -104,9 +124,13 @@ async def reserve_inventory(
 async def release_inventory(
     inventory_id: str,
     quantity: int,
+    current_user: dict = Depends(
+        get_current_user
+    ),
 ) -> InventoryResponse:
 
     return await inventory_controller.release_stock(
         inventory_id=inventory_id,
         quantity=quantity,
     )
+

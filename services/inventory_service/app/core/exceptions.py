@@ -1,18 +1,55 @@
 class AppException(Exception):
-    """Base exception for application-level errors."""
 
-    def __init__(self, message: str):
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        details=None,
+    ):
+        self.status_code = status_code
         self.message = message
+        self.details = details
+
         super().__init__(message)
 
 
 class InvalidRequestError(AppException):
-    """Raised when the request is invalid."""
 
-    pass
+    def __init__(
+        self,
+        message: str,
+        details=None,
+    ):
+        super().__init__(
+            status_code=400,
+            message=message,
+            details=details,
+        )
 
 
 class ResourceNotFoundError(AppException):
-    """Raised when a requested resource does not exist."""
 
-    pass
+    def __init__(
+        self,
+        message: str,
+        details=None,
+    ):
+        super().__init__(
+            status_code=404,
+            message=message,
+            details=details,
+        )
+
+class PermissionDeniedError(AppException):
+
+    def __init__(
+        self,
+        message: str = "Permission denied",
+        details=None,
+    ):
+        super().__init__(
+            status_code=403,
+            message=message,
+            details=details,
+        )        
+

@@ -5,6 +5,13 @@ from app.core.database import (
     close_database,
     connect_database,
 )
+from app.middleware.logging import (
+    logging_middleware,
+)
+from app.core.exceptions import AppException
+from app.middleware.exception_handler import (
+    app_exception_handler,
+)
 from app.middleware.request_id import (request_id_middleware,)
 from app.routers.inventory import router as inventory_router
 
@@ -33,6 +40,10 @@ app.add_exception_handler(
     AppException,
     app_exception_handler,
 )
+app.middleware("http")(
+    logging_middleware
+)
+
 
 app.include_router(
     inventory_router,
