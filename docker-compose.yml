@@ -128,6 +128,21 @@ services:
       - menu-service
     networks:
       - littihub-network
+
+
+
+  inventory_service:
+    build:
+      context: ./services/inventory_service
+      dockerfile: Dockerfile
+    container_name: littihub_inventory_service
+    env_file:
+      - ./services/inventory_service/.env
+    ports:
+      - "8007:8000"
+    depends_on:
+      - mongodb
+    restart: unless-stopped    
             
 
 networks:
