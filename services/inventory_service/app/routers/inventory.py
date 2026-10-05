@@ -1,6 +1,5 @@
 
 from fastapi import APIRouter, Depends, status
-
 from app.controllers.inventory_controller import (
     inventory_controller,
 )
@@ -13,6 +12,7 @@ from app.schemas.inventory import (
     CreateInventoryRequest,
     InventoryResponse,
     UpdateInventoryRequest,
+    InventoryQuantityRequest
 )
 
 
@@ -123,7 +123,7 @@ async def reserve_inventory(
 )
 async def release_inventory(
     inventory_id: str,
-    quantity: int,
+    request: InventoryQuantityRequest,
     current_user: dict = Depends(
         get_current_user
     ),
@@ -131,6 +131,5 @@ async def release_inventory(
 
     return await inventory_controller.release_stock(
         inventory_id=inventory_id,
-        quantity=quantity,
+        quantity=request.quantity,
     )
-
