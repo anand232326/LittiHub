@@ -5,6 +5,10 @@ from app.core.database import (
     close_database,
     connect_database,
 )
+from app.events.producer import (
+    close_kafka,
+    init_kafka,
+)
 from app.middleware.logging import (
     logging_middleware,
 )
@@ -20,8 +24,10 @@ from app.routers.inventory import router as inventory_router
 async def lifespan(app: FastAPI):
 
     await connect_database()
+    await init_kafka()
 
     yield
+    await close_kafka()
 
     await close_database()
 

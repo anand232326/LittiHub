@@ -104,7 +104,7 @@ async def update_inventory_quantity(
 )
 async def reserve_inventory(
     inventory_id: str,
-    quantity: int,
+    request: InventoryQuantityRequest,
     current_user: dict = Depends(
         get_current_user
     ),
@@ -112,7 +112,7 @@ async def reserve_inventory(
 
     return await inventory_controller.reserve_stock(
         inventory_id=inventory_id,
-        quantity=quantity,
+        quantity=request.quantity,
     )
 
 

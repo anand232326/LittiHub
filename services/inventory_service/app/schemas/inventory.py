@@ -25,3 +25,11 @@ class InventoryResponse(BaseModel):
     available_quantity: int
     created_at: datetime
     updated_at: datetime
+
+
+
+class InventoryQuantityRequest(BaseModel):
+    quantity: int = Field(
+        gt=0,
+        description="Quantity to reserve or release",
+    )
