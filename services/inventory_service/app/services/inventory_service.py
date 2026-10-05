@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from app.core.exceptions import (
     InvalidRequestError,
     ResourceNotFoundError,
@@ -18,15 +17,20 @@ class InventoryService:
         quantity: int,
     ) -> Inventory:
 
+        if quantity < 0:
+            raise InvalidRequestError(
+                "Quantity cannot be negative"
+            )
+
         existing_inventory = (
-            await inventory_repository
-            .get_by_restaurant_and_menu_item(
+            await inventory_repository.get_by_menu_item(
                 restaurant_id=restaurant_id,
                 menu_item_id=menu_item_id,
             )
         )
 
         if existing_inventory:
+
             raise InvalidRequestError(
                 "Inventory already exists for this menu item"
             )
@@ -35,33 +39,30 @@ class InventoryService:
             restaurant_id=restaurant_id,
             menu_item_id=menu_item_id,
             quantity=quantity,
-            reserved_quantity=0,
         )
 
         return await inventory_repository.create(
             inventory
         )
 
-
-
     async def get_inventory(
         self,
         inventory_id: str,
     ) -> Inventory:
 
-        inventory = await inventory_repository.get_by_id(
-            inventory_id
+        inventory = (
+            await inventory_repository.get_by_id(
+                inventory_id
+            )
         )
 
         if not inventory:
+
             raise ResourceNotFoundError(
                 "Inventory not found"
             )
 
         return inventory
-
-
-
 
     async def get_inventory_by_menu_item(
         self,
@@ -70,22 +71,19 @@ class InventoryService:
     ) -> Inventory:
 
         inventory = (
-            await inventory_repository
-            .get_by_restaurant_and_menu_item(
+            await inventory_repository.get_by_menu_item(
                 restaurant_id=restaurant_id,
                 menu_item_id=menu_item_id,
             )
         )
 
         if not inventory:
+
             raise ResourceNotFoundError(
                 "Inventory not found"
             )
 
         return inventory
-
-
-
 
     async def update_quantity(
         self,
@@ -93,25 +91,29 @@ class InventoryService:
         quantity: int,
     ) -> Inventory:
 
-        inventory = await self.get_inventory(
-            inventory_id
+        if quantity < 0:
+
+            raise InvalidRequestError(
+                "Quantity cannot be negative"
+            )
+
+        inventory = (
+            await inventory_repository.get_by_id(
+                inventory_id
+            )
         )
 
-        if quantity < inventory.reserved_quantity:
-            raise InvalidRequestError(
-                "Quantity cannot be less than reserved quantity"
+        if not inventory:
+
+            raise ResourceNotFoundError(
+                "Inventory not found"
             )
 
         inventory.quantity = quantity
-        inventory.updated_at = datetime.now(
-            timezone.utc
-        )
 
         return await inventory_repository.update(
             inventory
         )
-
-
 
     async def reserve_stock(
         self,
@@ -120,32 +122,37 @@ class InventoryService:
     ) -> Inventory:
 
         if quantity <= 0:
+
             raise InvalidRequestError(
                 "Reservation quantity must be greater than zero"
             )
 
-        inventory = await self.get_inventory(
-            inventory_id
+        inventory = (
+            await inventory_repository.get_by_id(
+                inventory_id
+            )
         )
 
-        if inventory.available_quantity < quantity:
-            raise InvalidRequestError(
-                "Insufficient inventory"
+        if not inventory:
+
+            raise ResourceNotFoundError(
+                "Inventory not found"
             )
 
-        inventory.reserved_quantity += quantity
-
-        inventory.updated_at = datetime.now(
-            timezone.utc
+        reserved_inventory = (
+            await inventory_repository.reserve(
+                inventory_id=inventory_id,
+                quantity=quantity,
+            )
         )
 
-        return await inventory_repository.update(
-            inventory
-        )
+        if not reserved_inventory:
 
+            raise InvalidRequestError(
+                "Insufficient available inventory"
+            )
 
-
-    
+        return reserved_inventory
 
     async def release_stock(
         self,
@@ -154,30 +161,37 @@ class InventoryService:
     ) -> Inventory:
 
         if quantity <= 0:
+
             raise InvalidRequestError(
                 "Release quantity must be greater than zero"
             )
 
-        inventory = await self.get_inventory(
-            inventory_id
+        inventory = (
+            await inventory_repository.get_by_id(
+                inventory_id
+            )
         )
 
-        if inventory.reserved_quantity < quantity:
-            raise InvalidRequestError(
-                "Release quantity exceeds reserved quantity"
+        if not inventory:
+
+            raise ResourceNotFoundError(
+                "Inventory not found"
             )
 
-        inventory.reserved_quantity -= quantity
-
-        inventory.updated_at = datetime.now(
-            timezone.utc
+        released_inventory = (
+            await inventory_repository.release(
+                inventory_id=inventory_id,
+                quantity=quantity,
+            )
         )
 
-        return await inventory_repository.update(
-            inventory
-        )
+        if not released_inventory:
 
+            raise InvalidRequestError(
+                "Cannot release more than the reserved quantity"
+            )
 
+        return released_inventory
 
 
 inventory_service = InventoryService()

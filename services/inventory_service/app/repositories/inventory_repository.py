@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from typing import Optional
 
 from pymongo import ReturnDocument
@@ -41,6 +42,10 @@ class InventoryRepository:
         inventory: Inventory,
     ) -> Inventory:
 
+        inventory.updated_at = datetime.now(
+            timezone.utc
+        )
+
         await inventory.save()
 
         return inventory
@@ -73,12 +78,8 @@ class InventoryRepository:
                     "reserved_quantity": quantity,
                 },
                 "$set": {
-                    "updated_at": __import__(
-                        "datetime"
-                    ).datetime.now(
-                        __import__(
-                            "datetime"
-                        ).timezone.utc
+                    "updated_at": datetime.now(
+                        timezone.utc
                     ),
                 },
             },
@@ -112,12 +113,8 @@ class InventoryRepository:
                     "reserved_quantity": -quantity,
                 },
                 "$set": {
-                    "updated_at": __import__(
-                        "datetime"
-                    ).datetime.now(
-                        __import__(
-                            "datetime"
-                        ).timezone.utc
+                    "updated_at": datetime.now(
+                        timezone.utc
                     ),
                 },
             },
