@@ -1,8 +1,8 @@
-
 from typing import Any
 
 from app.core.config import config
 from app.core.exceptions import (
+    AuthenticationError,
     InvalidRequestError,
     PermissionDeniedError,
     ResourceNotFoundError,
@@ -11,41 +11,78 @@ from app.core.exceptions import (
 from app.core.http_client import http_client
 
 
-class UserClient:
+class OrderClient:
 
     def __init__(self) -> None:
         self.base_url = (
-            config.USER_SERVICE_URL.rstrip("/")
+            config.ORDER_SERVICE_URL.rstrip("/")
         )
 
-    async def get_user(
+    async def create_order(
         self,
-        user_id: str,
-        access_token: str,
+        data: dict[str, Any],
+        token: str,
+        idempotency_key: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
-            method="GET",
-            url=f"{self.base_url}/api/users/{user_id}",
+            method="POST",
+            url=f"{self.base_url}/api/v1/orders",
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
+                "Idempotency-Key": idempotency_key,
+            },
+            json=data,
+        )
+
+        return await self._handle_response(response)
+
+    async def get_orders(
+        self,
+        token: str,
+    ) -> dict[str, Any] | list[Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=f"{self.base_url}/api/v1/orders",
+            headers={
+                "Authorization": token,
             },
         )
 
         return await self._handle_response(response)
 
-    async def update_user(
+    async def get_order(
         self,
-        user_id: str,
+        order_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=f"{self.base_url}/api/v1/orders/{order_id}",
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def update_order_status(
+        self,
+        order_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="PATCH",
-            url=f"{self.base_url}/api/users/{user_id}",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/orders/{order_id}/status"
+            ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
@@ -55,13 +92,21 @@ class UserClient:
     async def _handle_response(
         self,
         response,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[Any]:
 
         if response.status_code == 400:
             raise InvalidRequestError(
                 self._get_error_message(
                     response,
-                    "Invalid user request",
+                    "Invalid order request",
+                )
+            )
+
+        if response.status_code == 401:
+            raise AuthenticationError(
+                self._get_error_message(
+                    response,
+                    "Authentication failed",
                 )
             )
 
@@ -77,18 +122,18 @@ class UserClient:
             raise ResourceNotFoundError(
                 self._get_error_message(
                     response,
-                    "User not found",
+                    "Order not found",
                 )
             )
 
         if response.status_code >= 500:
             raise ServiceCommunicationError(
-                "User service is unavailable"
+                "Order service is unavailable"
             )
 
         if response.status_code >= 400:
             raise ServiceCommunicationError(
-                "User service request failed"
+                "Order service request failed"
             )
 
         try:
@@ -96,7 +141,7 @@ class UserClient:
 
         except ValueError as exc:
             raise ServiceCommunicationError(
-                "Invalid response from user service"
+                "Invalid response from order service"
             ) from exc
 
     @staticmethod
@@ -120,5 +165,4 @@ class UserClient:
         return default
 
 
-user_client = UserClient()
-
+order_client = OrderClient()

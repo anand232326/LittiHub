@@ -1,8 +1,8 @@
-
 from typing import Any
 
 from app.core.config import config
 from app.core.exceptions import (
+    AuthenticationError,
     InvalidRequestError,
     PermissionDeniedError,
     ResourceNotFoundError,
@@ -11,106 +11,111 @@ from app.core.exceptions import (
 from app.core.http_client import http_client
 
 
-class InventoryClient:
+class CartClient:
 
     def __init__(self) -> None:
         self.base_url = (
-            config.INVENTORY_SERVICE_URL.rstrip("/")
+            config.CART_SERVICE_URL.rstrip("/")
         )
 
-    async def get_inventory(
+    async def get_cart(
         self,
-        menu_item_id: str,
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="GET",
-            url=(
-                f"{self.base_url}"
-                f"/api/inventory/{menu_item_id}"
-            ),
+            url=f"{self.base_url}/api/v1/cart",
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
         )
 
         return await self._handle_response(response)
 
-    async def check_stock(
-        self,
-        menu_item_id: str,
-        quantity: int,
-        access_token: str,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="POST",
-            url=(
-                f"{self.base_url}"
-                f"/api/inventory/{menu_item_id}/check"
-            ),
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            json={
-                "quantity": quantity,
-            },
-        )
-
-        return await self._handle_response(response)
-
-    async def reserve_stock(
+    async def add_item(
         self,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="POST",
-            url=f"{self.base_url}/api/inventory/reserve",
+            url=f"{self.base_url}/api/v1/cart/items",
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
 
         return await self._handle_response(response)
 
-    async def release_stock(
-        self,
-        data: dict[str, Any],
-        access_token: str,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="POST",
-            url=f"{self.base_url}/api/inventory/release",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            json=data,
-        )
-
-        return await self._handle_response(response)
-
-    async def update_stock(
+    async def update_item(
         self,
         menu_item_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="PATCH",
             url=(
                 f"{self.base_url}"
-                f"/api/inventory/{menu_item_id}"
+                f"/api/v1/cart/items/{menu_item_id}"
             ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
+        )
+
+        return await self._handle_response(response)
+
+    async def remove_item(
+        self,
+        menu_item_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="DELETE",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/cart/items/{menu_item_id}"
+            ),
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def clear_cart(
+        self,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="DELETE",
+            url=f"{self.base_url}/api/v1/cart",
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def checkout(
+        self,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=f"{self.base_url}/api/v1/cart/checkout",
+            headers={
+                "Authorization": token,
+            },
         )
 
         return await self._handle_response(response)
@@ -124,7 +129,15 @@ class InventoryClient:
             raise InvalidRequestError(
                 self._get_error_message(
                     response,
-                    "Invalid inventory request",
+                    "Invalid cart request",
+                )
+            )
+
+        if response.status_code == 401:
+            raise AuthenticationError(
+                self._get_error_message(
+                    response,
+                    "Authentication failed",
                 )
             )
 
@@ -140,18 +153,18 @@ class InventoryClient:
             raise ResourceNotFoundError(
                 self._get_error_message(
                     response,
-                    "Inventory resource not found",
+                    "Cart resource not found",
                 )
             )
 
         if response.status_code >= 500:
             raise ServiceCommunicationError(
-                "Inventory service is unavailable"
+                "Cart service is unavailable"
             )
 
         if response.status_code >= 400:
             raise ServiceCommunicationError(
-                "Inventory service request failed"
+                "Cart service request failed"
             )
 
         try:
@@ -159,7 +172,7 @@ class InventoryClient:
 
         except ValueError as exc:
             raise ServiceCommunicationError(
-                "Invalid response from inventory service"
+                "Invalid response from cart service"
             ) from exc
 
     @staticmethod
@@ -183,4 +196,4 @@ class InventoryClient:
         return default
 
 
-inventory_client = InventoryClient()
+cart_client = CartClient()

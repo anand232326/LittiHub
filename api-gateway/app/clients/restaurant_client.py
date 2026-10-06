@@ -1,8 +1,8 @@
-
 from typing import Any
 
 from app.core.config import config
 from app.core.exceptions import (
+    AuthenticationError,
     InvalidRequestError,
     PermissionDeniedError,
     ResourceNotFoundError,
@@ -11,116 +11,162 @@ from app.core.exceptions import (
 from app.core.http_client import http_client
 
 
-class OrderClient:
+class RestaurantClient:
 
     def __init__(self) -> None:
+
         self.base_url = (
-            config.ORDER_SERVICE_URL.rstrip("/")
+            config.RESTAURANT_SERVICE_URL.rstrip("/")
         )
 
-    async def create_order(
+    async def create_restaurant(
         self,
         data: dict[str, Any],
-        access_token: str,
-        idempotency_key: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="POST",
-            url=f"{self.base_url}/api/orders",
+            url=f"{self.base_url}/api/v1/restaurants/",
             headers={
-                "Authorization": f"Bearer {access_token}",
-                "Idempotency-Key": idempotency_key,
+                "Authorization": token,
             },
             json=data,
         )
 
-        return await self._handle_response(response)
+        return await self._handle_response(
+            response
+        )
 
-    async def get_order(
+    async def get_restaurants(
         self,
-        order_id: str,
-        access_token: str,
+        token: str,
+    ) -> dict[str, Any] | list[Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=f"{self.base_url}/api/v1/restaurants",
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(
+            response
+        )
+
+    async def get_restaurant(
+        self,
+        restaurant_id: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="GET",
-            url=f"{self.base_url}/api/orders/{order_id}",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+            ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
         )
 
-        return await self._handle_response(response)
-
-    async def get_my_orders(
-        self,
-        access_token: str,
-        params: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="GET",
-            url=f"{self.base_url}/api/orders",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            params=params,
+        return await self._handle_response(
+            response
         )
 
-        return await self._handle_response(response)
-
-    async def update_order(
+    async def update_restaurant(
         self,
-        order_id: str,
+        restaurant_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="PATCH",
-            url=f"{self.base_url}/api/orders/{order_id}",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+            ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
 
-        return await self._handle_response(response)
+        return await self._handle_response(
+            response
+        )
 
-    async def cancel_order(
+    async def delete_restaurant(
         self,
-        order_id: str,
-        access_token: str,
+        restaurant_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="DELETE",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+            ),
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(
+            response
+        )
+
+    async def restore_restaurant(
+        self,
+        restaurant_id: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="POST",
             url=(
                 f"{self.base_url}"
-                f"/api/orders/{order_id}/cancel"
+                f"/api/v1/restaurants"
+                f"/{restaurant_id}/restore"
             ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
         )
 
-        return await self._handle_response(response)
+        return await self._handle_response(
+            response
+        )
 
     async def _handle_response(
         self,
         response,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | list[Any]:
 
         if response.status_code == 400:
+
             raise InvalidRequestError(
                 self._get_error_message(
                     response,
-                    "Invalid order request",
+                    "Invalid restaurant request",
+                )
+            )
+
+        if response.status_code == 401:
+
+            raise AuthenticationError(
+                self._get_error_message(
+                    response,
+                    "Authentication failed",
                 )
             )
 
         if response.status_code == 403:
+
             raise PermissionDeniedError(
                 self._get_error_message(
                     response,
@@ -129,29 +175,34 @@ class OrderClient:
             )
 
         if response.status_code == 404:
+
             raise ResourceNotFoundError(
                 self._get_error_message(
                     response,
-                    "Order not found",
+                    "Restaurant not found",
                 )
             )
 
         if response.status_code >= 500:
+
             raise ServiceCommunicationError(
-                "Order service is unavailable"
+                "Restaurant service is unavailable"
             )
 
         if response.status_code >= 400:
+
             raise ServiceCommunicationError(
-                "Order service request failed"
+                "Restaurant service request failed"
             )
 
         try:
+
             return response.json()
 
         except ValueError as exc:
+
             raise ServiceCommunicationError(
-                "Invalid response from order service"
+                "Invalid response from restaurant service"
             ) from exc
 
     @staticmethod
@@ -161,9 +212,11 @@ class OrderClient:
     ) -> str:
 
         try:
+
             data = response.json()
 
             if isinstance(data, dict):
+
                 return data.get(
                     "message",
                     default,
@@ -175,4 +228,4 @@ class OrderClient:
         return default
 
 
-order_client = OrderClient()
+restaurant_client = RestaurantClient()

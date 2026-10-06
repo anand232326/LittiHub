@@ -1,8 +1,8 @@
-
 from typing import Any
 
 from app.core.config import config
 from app.core.exceptions import (
+    AuthenticationError,
     InvalidRequestError,
     PermissionDeniedError,
     ResourceNotFoundError,
@@ -11,102 +11,138 @@ from app.core.exceptions import (
 from app.core.http_client import http_client
 
 
-class CartClient:
+class MenuClient:
 
     def __init__(self) -> None:
         self.base_url = (
-            config.CART_SERVICE_URL.rstrip("/")
+            config.MENU_SERVICE_URL.rstrip("/")
         )
 
-    async def get_cart(
+    async def create_category(
         self,
-        user_id: str,
-        access_token: str,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="GET",
-            url=f"{self.base_url}/api/cart/{user_id}",
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-        )
-
-        return await self._handle_response(response)
-
-    async def add_item(
-        self,
-        user_id: str,
+        restaurant_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="POST",
-            url=f"{self.base_url}/api/cart/{user_id}/items",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}/categories"
+            ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
 
         return await self._handle_response(response)
 
-    async def update_item(
+    async def create_menu_item(
         self,
-        user_id: str,
-        menu_item_id: str,
+        restaurant_id: str,
+        category_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="POST",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+                f"/categories/{category_id}/items"
+            ),
+            headers={
+                "Authorization": token,
+            },
+            json=data,
+        )
+
+        return await self._handle_response(response)
+
+    async def get_menu_item(
+        self,
+        restaurant_id: str,
+        item_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+                f"/items/{item_id}"
+            ),
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def update_menu_item(
+        self,
+        restaurant_id: str,
+        item_id: str,
+        data: dict[str, Any],
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="PATCH",
             url=(
                 f"{self.base_url}"
-                f"/api/cart/{user_id}"
-                f"/items/{menu_item_id}"
+                f"/api/v1/restaurants/{restaurant_id}"
+                f"/items/{item_id}"
             ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
 
         return await self._handle_response(response)
 
-    async def remove_item(
+    async def delete_menu_item(
         self,
-        user_id: str,
-        menu_item_id: str,
-        access_token: str,
+        restaurant_id: str,
+        item_id: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="DELETE",
             url=(
                 f"{self.base_url}"
-                f"/api/cart/{user_id}"
-                f"/items/{menu_item_id}"
+                f"/api/v1/restaurants/{restaurant_id}"
+                f"/items/{item_id}"
             ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
         )
 
         return await self._handle_response(response)
 
-    async def clear_cart(
+    async def restore_menu_item(
         self,
-        user_id: str,
-        access_token: str,
+        restaurant_id: str,
+        item_id: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
-            method="DELETE",
-            url=f"{self.base_url}/api/cart/{user_id}",
+            method="POST",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/restaurants/{restaurant_id}"
+                f"/items/{item_id}/restore"
+            ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
         )
 
@@ -121,7 +157,15 @@ class CartClient:
             raise InvalidRequestError(
                 self._get_error_message(
                     response,
-                    "Invalid cart request",
+                    "Invalid menu request",
+                )
+            )
+
+        if response.status_code == 401:
+            raise AuthenticationError(
+                self._get_error_message(
+                    response,
+                    "Authentication failed",
                 )
             )
 
@@ -137,18 +181,18 @@ class CartClient:
             raise ResourceNotFoundError(
                 self._get_error_message(
                     response,
-                    "Cart or cart item not found",
+                    "Menu resource not found",
                 )
             )
 
         if response.status_code >= 500:
             raise ServiceCommunicationError(
-                "Cart service is unavailable"
+                "Menu service is unavailable"
             )
 
         if response.status_code >= 400:
             raise ServiceCommunicationError(
-                "Cart service request failed"
+                "Menu service request failed"
             )
 
         try:
@@ -156,7 +200,7 @@ class CartClient:
 
         except ValueError as exc:
             raise ServiceCommunicationError(
-                "Invalid response from cart service"
+                "Invalid response from menu service"
             ) from exc
 
     @staticmethod
@@ -180,5 +224,4 @@ class CartClient:
         return default
 
 
-cart_client = CartClient()
-
+menu_client = MenuClient()

@@ -1,8 +1,8 @@
-
 from typing import Any
 
 from app.core.config import config
 from app.core.exceptions import (
+    AuthenticationError,
     InvalidRequestError,
     PermissionDeniedError,
     ResourceNotFoundError,
@@ -11,93 +11,130 @@ from app.core.exceptions import (
 from app.core.http_client import http_client
 
 
-class MenuClient:
+class InventoryClient:
 
     def __init__(self) -> None:
         self.base_url = (
-            config.MENU_SERVICE_URL.rstrip("/")
+            config.INVENTORY_SERVICE_URL.rstrip("/")
         )
 
-    async def get_menu_item(
+    async def create_inventory(
         self,
-        restaurant_id: str,
-        item_id: str,
-        access_token: str,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="GET",
-            url=(
-                f"{self.base_url}"
-                f"/api/restaurants/{restaurant_id}"
-                f"/menu/{item_id}"
-            ),
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-        )
-
-        return await self._handle_response(response)
-
-    async def get_restaurant_menu(
-        self,
-        restaurant_id: str,
-        access_token: str,
-        params: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
-
-        response = await http_client.request(
-            method="GET",
-            url=(
-                f"{self.base_url}"
-                f"/api/restaurants/{restaurant_id}/menu"
-            ),
-            headers={
-                "Authorization": f"Bearer {access_token}",
-            },
-            params=params,
-        )
-
-        return await self._handle_response(response)
-
-    async def create_menu_item(
-        self,
-        restaurant_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="POST",
-            url=(
-                f"{self.base_url}"
-                f"/api/restaurants/{restaurant_id}/menu"
-            ),
+            url=f"{self.base_url}/api/v1/inventory",
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
             },
             json=data,
         )
 
         return await self._handle_response(response)
 
-    async def update_menu_item(
+    async def get_inventory(
+        self,
+        inventory_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/inventory/{inventory_id}"
+            ),
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def get_inventory_by_menu_item(
         self,
         restaurant_id: str,
-        item_id: str,
+        menu_item_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="GET",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/inventory/restaurant/"
+                f"{restaurant_id}/menu-item/"
+                f"{menu_item_id}"
+            ),
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return await self._handle_response(response)
+
+    async def update_inventory(
+        self,
+        inventory_id: str,
         data: dict[str, Any],
-        access_token: str,
+        token: str,
     ) -> dict[str, Any]:
 
         response = await http_client.request(
             method="PATCH",
             url=(
                 f"{self.base_url}"
-                f"/api/restaurants/{restaurant_id}"
-                f"/menu/{item_id}"
+                f"/api/v1/inventory/{inventory_id}"
             ),
             headers={
-                "Authorization": f"Bearer {access_token}",
+                "Authorization": token,
+            },
+            json=data,
+        )
+
+        return await self._handle_response(response)
+
+    async def reserve_inventory(
+        self,
+        inventory_id: str,
+        data: dict[str, Any],
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="POST",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/inventory/"
+                f"{inventory_id}/reserve"
+            ),
+            headers={
+                "Authorization": token,
+            },
+            json=data,
+        )
+
+        return await self._handle_response(response)
+
+    async def release_inventory(
+        self,
+        inventory_id: str,
+        data: dict[str, Any],
+        token: str,
+    ) -> dict[str, Any]:
+
+        response = await http_client.request(
+            method="POST",
+            url=(
+                f"{self.base_url}"
+                f"/api/v1/inventory/"
+                f"{inventory_id}/release"
+            ),
+            headers={
+                "Authorization": token,
             },
             json=data,
         )
@@ -113,7 +150,15 @@ class MenuClient:
             raise InvalidRequestError(
                 self._get_error_message(
                     response,
-                    "Invalid menu request",
+                    "Invalid inventory request",
+                )
+            )
+
+        if response.status_code == 401:
+            raise AuthenticationError(
+                self._get_error_message(
+                    response,
+                    "Authentication failed",
                 )
             )
 
@@ -129,18 +174,18 @@ class MenuClient:
             raise ResourceNotFoundError(
                 self._get_error_message(
                     response,
-                    "Menu item not found",
+                    "Inventory resource not found",
                 )
             )
 
         if response.status_code >= 500:
             raise ServiceCommunicationError(
-                "Menu service is unavailable"
+                "Inventory service is unavailable"
             )
 
         if response.status_code >= 400:
             raise ServiceCommunicationError(
-                "Menu service request failed"
+                "Inventory service request failed"
             )
 
         try:
@@ -148,7 +193,7 @@ class MenuClient:
 
         except ValueError as exc:
             raise ServiceCommunicationError(
-                "Invalid response from menu service"
+                "Invalid response from inventory service"
             ) from exc
 
     @staticmethod
@@ -172,4 +217,4 @@ class MenuClient:
         return default
 
 
-menu_client = MenuClient()
+inventory_client = InventoryClient()
