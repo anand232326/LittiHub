@@ -1,5 +1,6 @@
 
 from fastapi import APIRouter, Depends, status
+
 from app.controllers.inventory_controller import (
     inventory_controller,
 )
@@ -10,9 +11,9 @@ from app.dependencies.auth import (
 )
 from app.schemas.inventory import (
     CreateInventoryRequest,
+    InventoryQuantityRequest,
     InventoryResponse,
     UpdateInventoryRequest,
-    InventoryQuantityRequest
 )
 
 
@@ -69,12 +70,9 @@ async def get_inventory_by_menu_item(
     ),
 ) -> InventoryResponse:
 
-    return await (
-        inventory_controller
-        .get_inventory_by_menu_item(
-            restaurant_id=restaurant_id,
-            menu_item_id=menu_item_id,
-        )
+    return await inventory_controller.get_inventory_by_menu_item(
+        restaurant_id=restaurant_id,
+        menu_item_id=menu_item_id,
     )
 
 
@@ -133,3 +131,4 @@ async def release_inventory(
         inventory_id=inventory_id,
         quantity=request.quantity,
     )
+
