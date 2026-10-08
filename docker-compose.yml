@@ -142,7 +142,31 @@ services:
       - "8007:8000"
     depends_on:
       - mongodb
-    restart: unless-stopped    
+    restart: unless-stopped  
+    networks:
+      - littihub-network
+
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: littihub-api-gateway
+    restart: unless-stopped
+    env_file:
+      - ./api-gateway/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - user-service
+      - restaurant-service
+      - menu-service
+      - order-service
+      - cart-service
+      - inventory_service
+    networks:
+      - littihub-network
             
 
 networks:
