@@ -45,3 +45,12 @@ class Config:
     MONGO_DB = get_required_env(
         "MONGO_DB"
     )
+
+    # Add Kafka Bootstrap Servers configuration here:
+    KAFKA_BOOTSTRAP_SERVERS = os.getenv(
+        "KAFKA_BOOTSTRAP_SERVERS",
+        "localhost:9092",
+    )
+
+
+config = Config()

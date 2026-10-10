@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from beanie import Document
+from pymongo import ASCENDING, IndexModel
 from pydantic import Field
 
 
@@ -28,15 +29,11 @@ class Inventory(Document):
 
     class Settings:
         name = "inventory"
-
         indexes = [
-            {
-                "key": [
-                    ("restaurant_id", 1),
-                    ("menu_item_id", 1),
-                ],
-                "unique": True,
-            }
+            IndexModel(
+                [("restaurant_id", ASCENDING), ("menu_item_id", ASCENDING)],
+                unique=True,
+            )
         ]
 
     @property

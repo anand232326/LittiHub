@@ -1,6 +1,4 @@
-
 import httpx
-
 from app.core.exceptions import (
     ServiceCommunicationError,
     ServiceTimeoutError,
@@ -12,8 +10,8 @@ class HTTPClient:
     def __init__(self) -> None:
         self.client: httpx.AsyncClient | None = None
 
-    async def start(self) -> None:
 
+    async def start(self) -> None:
         if self.client is not None:
             return
 
@@ -32,8 +30,8 @@ class HTTPClient:
             limits=limits,
         )
 
-    async def close(self) -> None:
 
+    async def close(self) -> None:
         if self.client is None:
             return
 
@@ -41,14 +39,16 @@ class HTTPClient:
 
         self.client = None
 
-    def get_client(self) -> httpx.AsyncClient:
 
+
+    def get_client(self) -> httpx.AsyncClient:
         if self.client is None:
             raise RuntimeError(
                 "HTTP client has not been initialized"
             )
 
         return self.client
+
 
     async def request(
         self,
