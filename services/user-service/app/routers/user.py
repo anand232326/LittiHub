@@ -35,19 +35,10 @@ async def create_profile(
     )
 
 
-@router.get(
-    "/me",
-    response_model=UserResponse,
-)
-async def get_my_profile(
-    current_user: dict = Depends(get_current_user),
-):
-
+@router.get("/me",response_model=UserResponse,)
+async def get_my_profile(current_user: dict = Depends(get_current_user),):
     auth_user_id = current_user["sub"]
-
-    return await user_controller.get_profile(
-        auth_user_id
-    )
+    return await user_controller.get_profile(auth_user_id)
 
 
 @router.patch(
@@ -65,3 +56,11 @@ async def update_my_profile(
         auth_user_id=auth_user_id,
         request=request,
     )
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user_endpoint(
+    user_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """API Endpoint to fetch a specific user profile by user ID."""
+    return await user_controller.get_user_by_id(user_id)

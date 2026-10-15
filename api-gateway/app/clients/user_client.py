@@ -1,4 +1,3 @@
-
 from typing import Any
 
 from app.core.config import config
@@ -56,6 +55,22 @@ class UserClient:
             method="PATCH",
             url=f"{self.base_url}/api/v1/users/me",
             json=data,
+            headers={
+                "Authorization": token,
+            },
+        )
+
+        return self._handle_response(response)
+
+    async def get_user(
+        self,
+        user_id: str,
+        token: str,
+    ) -> dict[str, Any]:
+        """Fetch any user profile by user ID from the user service."""
+        response = await http_client.request(
+            method="GET",
+            url=f"{self.base_url}/api/v1/users/{user_id}",
             headers={
                 "Authorization": token,
             },
