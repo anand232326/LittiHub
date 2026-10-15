@@ -19,7 +19,12 @@ async def init_kafka() -> None:
         logger.info("Kafka producer connected successfully.")
     except Exception as e:
         logger.warning(f"⚠️ Kafka connection failed: {e}. Running without event publishing.")
-        producer = None
+        if producer:
+            try:
+                await producer.stop()
+            except Exception:
+                pass
+            producer = None
 
 
 async def close_kafka() -> None:

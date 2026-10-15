@@ -21,14 +21,8 @@ router = APIRouter(
 auth_controller = AuthController()
 
 
-@router.post(
-    "/register",
-    response_model=UserResponse,
-    status_code=201,
-)
-async def register(
-    request: RegisterRequest,
-):
+@router.post("/register",response_model=UserResponse,status_code=201,)
+async def register(request: RegisterRequest,):
     return await auth_controller.register(request)
 
 
@@ -42,10 +36,7 @@ async def login(
     return await auth_controller.login(request)
 
 
-@router.get(
-    "/me",
-    response_model=UserResponse,
-)
+@router.get("/me",response_model=UserResponse,)
 async def get_current_user_info(
     current_user: dict = Depends(get_current_user),
 ):

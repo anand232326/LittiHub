@@ -20,11 +20,10 @@ class AuthController:
             user_repository=user_repository
         )
 
-    async def register(
-        self,
-        request: RegisterRequest,
-    ) -> UserResponse:
+    async def register(self,request: RegisterRequest,) -> UserResponse:
         return await self.auth_service.register(request)
+
+
 
     async def login(
         self,

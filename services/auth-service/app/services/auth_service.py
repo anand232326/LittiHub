@@ -31,14 +31,8 @@ class AuthService:
     ):
         self.user_repository = user_repository
 
-    async def register(
-        self,
-        request: RegisterRequest,
-    ) -> UserResponse:
-        """
-        Register a new user.
-        """
-
+    async def register(self,request: RegisterRequest,) -> UserResponse:
+       
         # 1. Check whether email is already registered
         existing_user = await self.user_repository.get_by_email(
             request.email
@@ -62,7 +56,7 @@ class AuthService:
         created_user = await self.user_repository.create(user)
 
         # 4. Convert database model → API response
-        return UserResponse(
+        response= UserResponse(
             id=str(created_user.id),
             email=created_user.email,
             first_name=created_user.first_name,
@@ -72,6 +66,12 @@ class AuthService:
             is_verified=created_user.is_verified,
             created_at=created_user.created_at,
         )
+        print(response)
+        return response
+        
+        
+
+
 
     async def login(
         self,

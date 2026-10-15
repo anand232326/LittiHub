@@ -5,11 +5,10 @@ from app.core.exceptions import (
 )
 
 
-class HTTPClient:
 
+class HTTPClient:
     def __init__(self) -> None:
         self.client: httpx.AsyncClient | None = None
-
 
     async def start(self) -> None:
         if self.client is not None:
@@ -28,18 +27,17 @@ class HTTPClient:
         self.client = httpx.AsyncClient(
             timeout=timeout,
             limits=limits,
+            follow_redirects=False,
         )
-
 
     async def close(self) -> None:
         if self.client is None:
             return
 
-        await self.client.aclose()
-
+        client = self.client
         self.client = None
 
-
+        await client.aclose()
 
     def get_client(self) -> httpx.AsyncClient:
         if self.client is None:
@@ -49,38 +47,27 @@ class HTTPClient:
 
         return self.client
 
-
     async def request(
         self,
         method: str,
         url: str,
         **kwargs,
     ) -> httpx.Response:
-
         client = self.get_client()
 
         try:
-
-            response = await client.request(
+            return await client.request(
                 method=method,
                 url=url,
                 **kwargs,
             )
 
-            return response
-
         except httpx.TimeoutException as exc:
-
             raise ServiceTimeoutError(
                 "Downstream service request timed out"
             ) from exc
 
-        except (
-            httpx.ConnectError,
-            httpx.NetworkError,
-            httpx.ProtocolError,
-        ) as exc:
-
+        except httpx.RequestError as exc:
             raise ServiceCommunicationError(
                 "Unable to communicate with downstream service"
             ) from exc

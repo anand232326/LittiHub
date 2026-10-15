@@ -27,7 +27,7 @@ class RestaurantClient:
 
         response = await http_client.request(
             method="POST",
-            url=f"{self.base_url}/api/v1/restaurants/",
+            url=f"{self.base_url}/api/v1/restaurants",
             headers={
                 "Authorization": token,
             },

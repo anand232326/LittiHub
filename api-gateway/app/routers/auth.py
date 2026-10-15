@@ -1,3 +1,4 @@
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
@@ -15,10 +16,13 @@ router = APIRouter(
 )
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    status_code=201,
+)
 async def register(
     data: dict[str, Any],
-):
+) -> dict[str, Any]:
     return await auth_client.register(
         data=data,
     )
@@ -27,7 +31,7 @@ async def register(
 @router.post("/login")
 async def login(
     data: dict[str, Any],
-):
+) -> dict[str, Any]:
     return await auth_client.login(
         data=data,
     )
@@ -37,9 +41,9 @@ async def login(
 async def get_current_user_profile(
     request: Request,
     current_user: AuthenticatedUser = Depends(
-        get_current_user
+        get_current_user,
     ),
-):
+) -> dict[str, Any]:
     return await auth_client.get_me(
         token=request.headers["Authorization"],
     )
