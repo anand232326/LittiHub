@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post("")
 async def create_restaurant(
     data: dict[str, Any],
     request: Request,

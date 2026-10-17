@@ -19,11 +19,7 @@ router = APIRouter(
 restaurant_controller = RestaurantController()
 
 
-@router.post(
-    "/",
-    response_model=RestaurantResponse,
-    status_code=201,
-)
+@router.post("",response_model=RestaurantResponse,status_code=201,)
 async def create_restaurant(
     request: CreateRestaurantRequest,
     current_user: dict = Depends(
