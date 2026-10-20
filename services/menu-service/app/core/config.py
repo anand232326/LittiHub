@@ -59,4 +59,6 @@ class Config:
         "HS256",
     )
 
-    RESTAURANT_SERVICE_URL: str
+    RESTAURANT_SERVICE_URL: str = get_required_env(
+        "RESTAURANT_SERVICE_URL"
+    )

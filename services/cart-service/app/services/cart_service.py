@@ -1,4 +1,3 @@
-
 from app.clients.menu_client import menu_client
 from app.core.exceptions import (
     InvalidRequestError,
@@ -10,6 +9,7 @@ from app.schemas.cart import (
     AddCartItemRequest,
     UpdateCartItemRequest,
     CartResponse,
+    CartItemResponse,
 )
 
 
@@ -36,8 +36,6 @@ class CartService:
             )
 
         return self._to_response(cart)
-
-
 
     async def add_item(
         self,
@@ -127,9 +125,6 @@ class CartService:
 
             return self._to_response(cart)
 
-
-
-
     async def update_item(
         self,
         user_id: str,
@@ -195,9 +190,6 @@ class CartService:
 
             return self._to_response(cart)
 
-
-
-
     async def remove_item(
         self,
         user_id: str,
@@ -253,31 +245,26 @@ class CartService:
 
             return self._to_response(cart)
 
-
-
     async def get_cart_for_checkout(
-    self,
-    user_id: str,
+        self,
+        user_id: str,
     ) -> CartResponse:
 
         cart = await self.repository.get_cart(
-        user_id=user_id
+            user_id=user_id
         )
 
         if cart is None:
             raise ResourceNotFoundError(
-            "Cart not found"
-        )
+                "Cart not found"
+            )
 
         if not cart.items:
             raise InvalidRequestError(
-            "Cart is empty"
-        )
+                "Cart is empty"
+            )
 
         return self._to_response(cart)
-
-    
-
 
     async def clear_cart(
         self,
@@ -291,9 +278,6 @@ class CartService:
             await self.repository.delete_cart(
                 user_id=user_id
             )
-
-
-
 
     @staticmethod
     def _validate_menu_item(
@@ -359,11 +343,22 @@ class CartService:
     def _to_response(
         cart: Cart,
     ) -> CartResponse:
+        item_responses = [
+            CartItemResponse(
+                menu_item_id=str(item.menu_item_id),
+                name=item.name,
+                price=item.price,
+                quantity=item.quantity,
+                total_price=item.total_price,
+            )
+            for item in cart.items
+        ]
 
         return CartResponse(
+            cart_id=str(cart.id) if hasattr(cart, "id") and cart.id else None,
             user_id=cart.user_id,
             restaurant_id=cart.restaurant_id,
-            items=cart.items,
+            items=item_responses,
             subtotal=cart.subtotal,
             total_items=cart.total_items,
         )
@@ -372,4 +367,3 @@ class CartService:
 cart_service = CartService(
     repository=CartRepository()
 )
-

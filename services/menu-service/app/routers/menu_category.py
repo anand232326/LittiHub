@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status,Request
 from app.dependencies.auth import require_roles
 from app.controllers.menu_category_controller import MenuCategoryController
 from app.dependencies.menu import get_menu_category_controller
@@ -28,15 +28,23 @@ router = APIRouter(
 )
 async def create_category(
     restaurant_id: str,
+    fastapi_request: Request,
     request: CreateMenuCategoryRequest,
     controller: MenuCategoryController = Depends(
         get_menu_category_controller
     ),
-):
+):  
+    auth_header = fastapi_request.headers.get("Authorization")
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+
     return await controller.create_category(
         restaurant_id=restaurant_id,
         request=request,
+        token=token,
     )
+
 
 
 @router.get(

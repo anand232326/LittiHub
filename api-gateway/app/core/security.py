@@ -47,7 +47,6 @@ async def get_current_user(
                 "require_exp": True,
             },
         )
-
     except JWTError as exc:
         raise AuthenticationError(
             "Invalid or expired authentication token"
@@ -57,14 +56,10 @@ async def get_current_user(
     role = payload.get("role")
 
     if not isinstance(user_id, str) or not user_id:
-        raise AuthenticationError(
-            "Invalid authentication token"
-        )
+        raise AuthenticationError("Invalid authentication token")
 
     if not isinstance(role, str) or not role:
-        raise AuthenticationError(
-            "Invalid authentication token"
-        )
+        raise AuthenticationError("Invalid authentication token")
 
     return AuthenticatedUser(
         user_id=user_id,

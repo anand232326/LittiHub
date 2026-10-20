@@ -21,11 +21,12 @@ class MenuCategoryService:
         self.repository = repository
 
 
-    async def create_category(self,restaurant_id: str,request: CreateMenuCategoryRequest,
+    async def create_category(self,restaurant_id: str,request: CreateMenuCategoryRequest,token: str = None
     ) -> MenuCategoryResponse:
 
         restaurant = await restaurant_client.get_restaurant(
-          restaurant_id
+          restaurant_id,
+          token=token
         )
 
         if restaurant is None:

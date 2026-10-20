@@ -12,10 +12,11 @@ class MenuCategoryController:
         self.service = service
 
 
-    async def create_category(self,restaurant_id: str,request: CreateMenuCategoryRequest,) -> MenuCategoryResponse:
+    async def create_category(self,restaurant_id: str,request: CreateMenuCategoryRequest,token: str = None) -> MenuCategoryResponse:
         return await self.service.create_category(
             restaurant_id=restaurant_id,
             request=request,
+            token=token,
         )
 
 

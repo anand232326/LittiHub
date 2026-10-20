@@ -14,27 +14,34 @@ class MenuItemController:
     ):
         self.service = service
 
+
     async def create_item(
         self,
         restaurant_id: str,category_id: str,
         request: CreateMenuItemRequest,
+        token: str = None,
     ) -> MenuItemResponse:
 
         return await self.service.create_item(
             restaurant_id=restaurant_id,
             category_id=category_id,
             request=request,
+            token=token,
         )
+
+
 
     async def get_item(
         self,
         restaurant_id: str,
         item_id: str,
+        token: str = None,
     ) -> MenuItemResponse:
 
         return await self.service.get_item(
             restaurant_id=restaurant_id,
             item_id=item_id,
+            token=token,
         )
 
     async def update_item(

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status,Request
 from app.dependencies.auth import require_roles
 from app.controllers.menu_item_controller import MenuItemController
 from app.dependencies.menu import get_menu_item_controller
@@ -19,22 +19,28 @@ router = APIRouter(
     response_model=MenuItemResponse,
     status_code=status.HTTP_201_CREATED,
     dependencies=[
-    Depends(
-        require_roles(
-            "admin",
-            "restaurant_admin",
+        Depends(
+            require_roles(
+                "admin",
+                "restaurant_admin",
+            )
         )
-    )
-]
+   ],
 )
 async def create_item(
     restaurant_id: str,
     category_id: str,
     request: CreateMenuItemRequest,
+    fastapi_request: Request,
     controller: MenuItemController = Depends(
         get_menu_item_controller
     ),
-):
+):  
+    # 2. Extract Authorization header token
+    auth_header = fastapi_request.headers.get("Authorization")
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
     # The category_id in the URL establishes the resource context.
     # We still keep category_id in the request schema for now,
     # but we should ensure both values match.
@@ -48,8 +54,9 @@ async def create_item(
 
     return await controller.create_item(
         restaurant_id=restaurant_id,
-         category_id=category_id,
+        category_id=category_id,
         request=request,
+        token=token,
     )
 
 
@@ -70,13 +77,21 @@ async def create_item(
 async def get_item(
     restaurant_id: str,
     item_id: str,
+    fastapi_request: Request,
     controller: MenuItemController = Depends(
         get_menu_item_controller
     ),
 ):
+    
+    auth_header = fastapi_request.headers.get("Authorization")
+    token = None
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+
     return await controller.get_item(
         restaurant_id=restaurant_id,
         item_id=item_id,
+        token=token,
     )
 
 

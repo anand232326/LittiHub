@@ -24,14 +24,18 @@ class MenuItemService:
         self.item_repository = item_repository
         self.category_repository = category_repository
 
+
     async def create_item(
         self,
         restaurant_id: str,category_id: str,
         request: CreateMenuItemRequest,
+        token: str = None,
+        
     ) -> MenuItemResponse:
 
         restaurant = await restaurant_client.get_restaurant(
-            restaurant_id=restaurant_id
+            restaurant_id=restaurant_id,
+            token=token,
         )
 
         if restaurant is None:
@@ -79,15 +83,19 @@ class MenuItemService:
 
         return self._to_response(item)
 
+
+
     async def get_item(
         self,
         restaurant_id: str,
         item_id: str,
+        token: str = None,
     ) -> MenuItemResponse:
 
         item = await self.item_repository.get_by_restaurant_and_id(
             restaurant_id=restaurant_id,
             item_id=item_id,
+            
         )
 
         if not item:
@@ -96,6 +104,7 @@ class MenuItemService:
             )
 
         return self._to_response(item)
+
 
     async def update_item(
         self,

@@ -14,6 +14,7 @@ class MenuItemRepository:
 
         return item
 
+
     async def get_by_id(
         self,
         item_id: str,
@@ -26,16 +27,21 @@ class MenuItemRepository:
             ObjectId(item_id)
         )
 
+
     async def get_by_restaurant_and_id(
         self,
         restaurant_id: str,
         item_id: str,
     ) -> Optional[MenuItem]:
 
+        if not ObjectId.is_valid(item_id):
+            return None
+
         return await MenuItem.find_one(
-            MenuItem.id == item_id,
+            MenuItem.id == ObjectId(item_id),
             MenuItem.restaurant_id == restaurant_id,
         )
+
 
     async def get_by_category_and_name(
         self,
